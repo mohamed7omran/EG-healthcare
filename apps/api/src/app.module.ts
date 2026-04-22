@@ -8,7 +8,6 @@ import { AppointmentModule } from './appointment/appointment.module';
 import { ConfigModule } from '@nestjs/config';
 import { GeminiModule } from './gemini/gemini.module';
 import { AiAnalysisModule } from './ai-analysis/ai-analysis.module';
-
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -17,12 +16,12 @@ import { AiAnalysisModule } from './ai-analysis/ai-analysis.module';
     }),
     PatientModule,
     TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'postgres',
-      password: '',
-      database: 'eghealthcare',
+      type: process.env.DB_TYPE as any,
+      host: process.env.DB_HOST ?? 'localhost',
+      port: parseInt(process.env.DB_PORT ?? '5432', 10),
+      username: process.env.DB_USER ?? '',
+      password: process.env.DB_PASS ?? '',
+      database: process.env.DB_NAME ?? 'eghealthcare',
       autoLoadEntities: true,
       synchronize: true,
     }),
