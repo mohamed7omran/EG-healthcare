@@ -5,22 +5,46 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  PrimaryColumn,
 } from 'typeorm';
 import { Appointment } from '../../appointment/entities/appointment.entity';
 
+export enum Gender {
+  Male = 'Male',
+  Female = 'Female',
+  Other = 'Other',
+}
 @Entity()
 export class Doctor {
-  @PrimaryGeneratedColumn()
-  doctorID: number;
+  @PrimaryColumn()
+  doctorID!: String;
 
   @Column()
-  name: string;
+  name!: string;
 
   @Column({ nullable: true })
   avatar: string;
 
   @Column()
-  specialty: string;
+  age: number;
+
+  @Column({ type: 'enum', enum: ['Male', 'Female', 'Other'] })
+  gender: 'Male' | 'Female' | 'Other';
+
+  @Column()
+  phoneNumber: string;
+
+  @Column()
+  email: string;
+
+  @Column()
+  address: string;
+
+  @Column()
+  role: string;
+
+  @Column()
+  specialty!: string;
 
   @Column({ nullable: true })
   experience: string;

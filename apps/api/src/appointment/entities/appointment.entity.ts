@@ -34,6 +34,10 @@ export class Appointment {
 
   @Column()
   time: string;
+
+  @Column()
+  type: string;
+
   @Column({
     type: 'enum',
     enum: AppointmentStatus,

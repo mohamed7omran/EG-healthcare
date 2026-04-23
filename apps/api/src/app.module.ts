@@ -17,8 +17,8 @@ import { AiAnalysisModule } from './ai-analysis/ai-analysis.module';
     PatientModule,
     TypeOrmModule.forRoot({
       type: process.env.DB_TYPE as any,
-      host: process.env.DB_HOST ?? 'localhost',
-      port: parseInt(process.env.DB_PORT ?? '5432', 10),
+      host: process.env.DB_HOST ,
+      port: process.env.DB_PORT as any,
       username: process.env.DB_USER ?? '',
       password: process.env.DB_PASS ?? '',
       database: process.env.DB_NAME ?? 'eghealthcare',

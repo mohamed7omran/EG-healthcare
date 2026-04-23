@@ -1,11 +1,11 @@
 import { Appointment } from '../../appointment/entities/appointment.entity';
 import {
   Entity,
-  PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  PrimaryColumn,
 } from 'typeorm';
 
 export enum Gender {
@@ -15,14 +15,21 @@ export enum Gender {
 }
 @Entity()
 export class Patient {
-  @PrimaryGeneratedColumn()
-  patientID: number;
+  
+  @PrimaryColumn()
+  patientID: String;
 
   @Column()
   name: string;
 
   @Column()
   age: number;
+  
+  @Column()
+  role: string;
+  
+  @Column({ nullable: true })
+  avatar: string;
 
   @Column({ type: 'enum', enum: ['Male', 'Female', 'Other'] })
   gender: 'Male' | 'Female' | 'Other';

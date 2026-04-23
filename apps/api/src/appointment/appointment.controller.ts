@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { AppointmentService } from './appointment.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
@@ -21,22 +22,30 @@ export class AppointmentController {
   }
 
   @Get()
-  findAll() {
+  find(@Query('doctorID') doctorID?: string,@Query('patientID') patientID?: string,) {
+    if (doctorID) {
+      return this.appointmentService.findByDoctorId(doctorID);
+    }
+
+    if (patientID) {
+      return this.appointmentService.findByPatientId(patientID);
+    }
+
     return this.appointmentService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id') id: number) {
     return this.appointmentService.findOne(+id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateAppointmentDto) {
+  update(@Param('id') id: number, @Body() dto: UpdateAppointmentDto) {
     return this.appointmentService.update(+id, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id') id: number) {
     return this.appointmentService.remove(+id);
   }
 }

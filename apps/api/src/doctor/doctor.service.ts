@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Doctor } from './entities/doctor.entity';
 import { CreateDoctorDto } from './dto/create-doctor.dto';
 import { UpdateDoctorDto } from './dto/update-doctor.dto';
+import { Patient } from 'src/patient/entities/patient.entity';
 
 @Injectable()
 export class DoctorService {
@@ -21,7 +22,7 @@ export class DoctorService {
     return this.doctorRepository.find();
   }
 
-  async findOne(id: number): Promise<Doctor> {
+  async findOne(id: string): Promise<Doctor> {
     const doctor = await this.doctorRepository.findOne({
       where: { doctorID: id },
     });
@@ -29,12 +30,20 @@ export class DoctorService {
     return doctor;
   }
 
-  async update(id: number, updateDoctorDto: UpdateDoctorDto): Promise<Doctor> {
+  // async findDoctorPatient(id: string): Promise<Patient> {
+  //   const doctorPatient = await this.doctorRepository.find({
+  //     where: { patientID: id },
+  //   });
+  //   if (!doctorPatient) throw new NotFoundException('Doctor not found');
+  //   return doctorPatient;
+  // }
+
+  async update(id: string, updateDoctorDto: UpdateDoctorDto): Promise<Doctor> {
     await this.doctorRepository.update(id, updateDoctorDto);
     return this.findOne(id);
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: string): Promise<void> {
     const result = await this.doctorRepository.delete(id);
     if (result.affected === 0) throw new NotFoundException('Doctor not found');
   }

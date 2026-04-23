@@ -1,18 +1,24 @@
-import { IsInt, IsEnum, IsNotEmpty, IsDateString } from 'class-validator';
+import { IsInt, IsEnum, IsNotEmpty, IsDateString, IsString } from 'class-validator';
 import { AppointmentStatus } from '../entities/appointment.entity';
 
 export class CreateAppointmentDto {
-  @IsInt()
-  doctorID: number;
+  @IsNotEmpty()
+  @IsString()
+  doctorID: String;
 
-  @IsInt()
-  patientID: number;
+  @IsNotEmpty()
+  @IsString()
+  patientID: String;
 
+  @IsNotEmpty()
   @IsDateString()
   date: string;
 
   @IsNotEmpty()
   time: string;
+
+  @IsNotEmpty()
+  type: string;
 
   @IsEnum(AppointmentStatus)
   status: AppointmentStatus;

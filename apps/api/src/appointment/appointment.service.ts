@@ -32,6 +32,7 @@ export class AppointmentService {
     const appointment = this.appointmentRepository.create({
       doctor,
       patient,
+      type:dto.type,
       date: dto.date,
       time: dto.time,
       status: dto.status,
@@ -42,6 +43,37 @@ export class AppointmentService {
 
   findAll(): Promise<Appointment[]> {
     return this.appointmentRepository.find();
+  }
+
+  async findByDoctorId(id:string): Promise<Appointment[]> {
+    const appointments = await this.appointmentRepository.find({
+      where: {
+      doctor: {
+        doctorID: id,
+      },
+    },
+    relations: ['doctor', 'patient'],
+      
+    });
+    if (appointments.length === 0) {
+    throw new NotFoundException('No appointments found for this doctor');
+  }
+  return appointments;
+  }
+
+  async findByPatientId(id:string): Promise<Appointment[]> {
+    const appointments = await this.appointmentRepository.find({
+      where: {
+      patient: {
+        patientID: id,
+      },
+    },
+      
+    });
+    if (appointments.length === 0) {
+    throw new NotFoundException('No appointments found for this patient');
+  }
+  return appointments;
   }
 
   async findOne(id: number): Promise<Appointment> {
