@@ -34,11 +34,6 @@ export class AppointmentController {
     return this.appointmentService.findAll();
   }
   
-  @Get('doctors/:id/patients')
-  findPatientsByDoctorId(@Param('id') id: string){
-
-    return this.appointmentService.findPatientsByDoctorId(id)
-  }
 
   @Get(':id')
   findOne(@Param('id') id: number) {
