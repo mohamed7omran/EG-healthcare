@@ -84,6 +84,21 @@ export class AppointmentService {
     return appointment;
   }
 
+  async findPatientsByDoctorId(id: string): Promise<Patient[]> {
+  const patients = await this.appointmentRepository
+    .createQueryBuilder('appointment')
+    .leftJoinAndSelect('appointment.patient', 'patient')
+    .where('appointment.doctor.doctorID = :id', { id })
+    .groupBy('patient.patientID')
+    .getMany();
+
+  if (patients.length === 0) {
+    throw new NotFoundException('No patients found for this doctor');
+  }
+
+  return patients.map(a => a.patient);
+}
+
   async update(id: number, dto: UpdateAppointmentDto): Promise<Appointment> {
     const appointment = await this.findOne(id);
 
