@@ -15,7 +15,6 @@ export enum Gender {
 }
 @Entity()
 export class Patient {
-  
   @PrimaryColumn()
   patientID: String;
 
@@ -24,10 +23,7 @@ export class Patient {
 
   @Column()
   age: number;
-  
-  @Column()
-  role: string;
-  
+
   @Column({ nullable: true })
   avatar: string;
 

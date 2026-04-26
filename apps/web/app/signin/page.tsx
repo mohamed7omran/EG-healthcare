@@ -13,6 +13,18 @@ import {
   signInWithPopup,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import { client } from "@/lib/axios";
+
+const ROLE_STORAGE_KEY = (uid: string) => `user_role_${uid}`;
+const resolveRoleFromApi = async (uid: string) => {
+  const { data } = await client.get(`/users/${uid}`);
+  return data?.role === "doctor" ? "doctor" : "patient";
+};
+
+const getFirebaseErrorCode = (err: unknown) =>
+  typeof err === "object" && err !== null && "code" in err
+    ? String((err as { code?: string }).code)
+    : "";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -29,10 +41,13 @@ export default function SignInPage() {
     setIsLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const credential = await signInWithEmailAndPassword(auth, email, password);
+      const uid = credential.user.uid;
+      const role = await resolveRoleFromApi(uid);
+      localStorage.setItem(ROLE_STORAGE_KEY(uid), role);
       router.push("/dashboard");
-    } catch (err: any) {
-      const errorCode = err.code;
+    } catch (err: unknown) {
+      const errorCode = getFirebaseErrorCode(err);
       let errorMessage = "Failed to sign in. Please try again.";
 
       if (errorCode === "auth/user-not-found") {
@@ -58,10 +73,13 @@ export default function SignInPage() {
 
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      const credential = await signInWithPopup(auth, provider);
+      const uid = credential.user.uid;
+      const role = await resolveRoleFromApi(uid);
+      localStorage.setItem(ROLE_STORAGE_KEY(uid), role);
       router.push("/dashboard");
-    } catch (err: an0y) {
-      const errorCode = err.code;
+    } catch (err: unknown) {
+      const errorCode = getFirebaseErrorCode(err);
       let errorMessage = "Failed to sign in with Google. Please try again.";
 
       if (errorCode === "auth/popup-closed-by-user") {
@@ -167,7 +185,7 @@ export default function SignInPage() {
               <label className="flex items-center gap-2 cursor-pointer">
                 <Checkbox
                   checked={rememberMe}
-                  onCheckedChange={setRememberMe}
+                  onCheckedChange={(checked) => setRememberMe(checked === true)}
                   className="border-input"
                 />
                 <span className="text-sm text-muted-foreground">

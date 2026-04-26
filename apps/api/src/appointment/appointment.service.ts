@@ -1,3 +1,20 @@
+/**
+ * @file AppointmentService
+ * @description Handles appointment management and doctor-specific data retrieval.
+ * * @task_summary:
+ * 1. Current Appointments:
+ * - Fetch all 'Pending' appointments for a specific doctor.
+ * - Requirements: Join with Patient entity and sort by Date/Time (ASC).
+ * * 2. Unique Patient History:
+ * - Retrieve a unique list of all patients who have ever visited a specific doctor.
+ * - Requirements: Use QueryBuilder with DISTINCT to prevent duplicate patient records.
+ * * @note_on_legacy_methods:
+ * - The methods [findByDoctorId, findByPatientId, findOne] are general-purpose
+ * and NOT optimal for the specific dashboard tasks.
+ * - They return redundant data (duplicates) and lack the necessary status
+ * filtering (e.g., Pending vs All) required for a professional clinical workflow.
+ * * @tech_stack: NestJS, TypeORM, PostgreSQL.
+ */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -32,7 +49,7 @@ export class AppointmentService {
     const appointment = this.appointmentRepository.create({
       doctor,
       patient,
-      type:dto.type,
+      type: dto.type,
       date: dto.date,
       time: dto.time,
       status: dto.status,
@@ -45,35 +62,33 @@ export class AppointmentService {
     return this.appointmentRepository.find();
   }
 
-  async findByDoctorId(id:string): Promise<Appointment[]> {
+  async findByDoctorId(id: string): Promise<Appointment[]> {
     const appointments = await this.appointmentRepository.find({
       where: {
-      doctor: {
-        doctorID: id,
+        doctor: {
+          doctorID: id,
+        },
       },
-    },
-    relations: ['doctor', 'patient'],
-      
+      relations: ['doctor', 'patient'],
     });
     if (appointments.length === 0) {
-    throw new NotFoundException('No appointments found for this doctor');
-  }
-  return appointments;
+      throw new NotFoundException('No appointments found for this doctor');
+    }
+    return appointments;
   }
 
-  async findByPatientId(id:string): Promise<Appointment[]> {
+  async findByPatientId(id: string): Promise<Appointment[]> {
     const appointments = await this.appointmentRepository.find({
       where: {
-      patient: {
-        patientID: id,
+        patient: {
+          patientID: id,
+        },
       },
-    },
-      
     });
     if (appointments.length === 0) {
-    throw new NotFoundException('No appointments found for this patient');
-  }
-  return appointments;
+      throw new NotFoundException('No appointments found for this patient');
+    }
+    return appointments;
   }
 
   async findOne(id: number): Promise<Appointment> {

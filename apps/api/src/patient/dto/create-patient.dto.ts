@@ -1,4 +1,13 @@
-import { IsString, IsInt, IsEnum, IsOptional, IsEmail, IsPhoneNumber, IsNumber, IsNotEmpty } from 'class-validator';
+import {
+  IsString,
+  IsInt,
+  IsEnum,
+  IsOptional,
+  IsEmail,
+  IsPhoneNumber,
+  IsNumber,
+  IsNotEmpty,
+} from 'class-validator';
 import { Gender } from '../entities/patient.entity';
 import { Type } from 'class-transformer';
 
@@ -6,25 +15,21 @@ export class CreatePatientDto {
   @IsNotEmpty()
   @IsString()
   patientID: string;
-  
+
   @IsNotEmpty()
   @IsString()
   name: string;
-  
+
   @Type(() => Number)
   @IsNotEmpty()
   @IsNumber()
   age: number;
 
-  @IsNotEmpty()
-  @IsString()
-  role: string;
-
   @IsEnum(Gender)
   gender: Gender;
 
-  
-  @IsPhoneNumber()
+  // @IsPhoneNumber()
+  @IsString()
   phoneNumber: string;
 
   @IsOptional()

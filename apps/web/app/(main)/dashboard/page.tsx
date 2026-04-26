@@ -128,53 +128,51 @@ function PatientDashboard() {
         )}
       </div>
 
-
       {/* Featured Doctors */}
-     { isLoading ? (
-      <div className="flex h-32 items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-      </div>
-      ):(
-        isError || doctors.length === 0 ?(
+      {isLoading ? (
+        <div className="flex h-32 items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
+      ) : isError || doctors.length === 0 ? (
         <div>error</div>
-      ):(
-      <div>
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-display text-xl font-semibold text-foreground">
-            Featured Doctors
-          </h2>
-          <Link href="/Doctors">
-            <Button variant="ghost" size="sm" className="group">
-              View All
-              <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </Button>
-          </Link>
+      ) : (
+        <div>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="font-display text-xl font-semibold text-foreground">
+              Featured Doctors
+            </h2>
+            <Link href="/Doctors">
+              <Button variant="ghost" size="sm" className="group">
+                View All
+                <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Button>
+            </Link>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {doctors.slice(0, 3).map((doctor) => (
+              <Card
+                key={doctor.doctorID}
+                className="group hover:shadow-elevated transition-shadow"
+              >
+                <CardContent className="flex items-center gap-4 p-4">
+                  <img
+                    src={doctor.avatar}
+                    alt={doctor.name}
+                    className="h-14 w-14 rounded-full object-cover border-2 border-primary/10"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors truncate">
+                      {doctor.name}
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      {doctor.specialty}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {doctors.slice(0, 3).map((doctor) => (
-            <Card
-              key={doctor.doctorID}
-              className="group hover:shadow-elevated transition-shadow"
-            >
-              <CardContent className="flex items-center gap-4 p-4">
-                <img
-                  src={doctor.avatar}
-                  alt={doctor.name}
-                  className="h-14 w-14 rounded-full object-cover border-2 border-primary/10"
-                />
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors truncate">
-                    {doctor.name}
-                  </h4>
-                  <p className="text-sm text-muted-foreground">
-                    {doctor.specialty}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>)
       )}
     </>
   );
@@ -285,7 +283,15 @@ function DoctorDashboard() {
 }
 
 export default function Dashboard() {
-  const { role } = useApp();
+  const { role, authLoading } = useApp();
+
+  if (authLoading) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return role === "patient" ? <PatientDashboard /> : <DoctorDashboard />;
 }

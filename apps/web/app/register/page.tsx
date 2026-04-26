@@ -22,6 +22,7 @@ export default function RegisterPage() {
     phoneNumber: "",
     age: "",
     gender: "Male",
+    address: "",
     specialty: "",
     experience: "",
     agreeToTerms: false,
@@ -70,61 +71,23 @@ export default function RegisterPage() {
       newErrors.terms = "You must agree to the terms";
     }
 
+    if (
+      (formData.role === "patient" || formData.role === "doctor") &&
+      !formData.address.trim()
+    ) {
+      newErrors.address = "Address is required";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
-  // const handleSubmit = async (e: React.FormEvent) => {
-  //   e.preventDefault()
-  //   setGlobalError('')
-
-  //   if (!validateForm()) {
-  //     return
-  //   }
-
-  //   setIsLoading(true)
-
-  //   try {
-  //     // Create user account
-  //     const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password)
-
-  //     // Update profile with display name
-  //     await updateProfile(userCredential.user, {
-  //       displayName: formData.fullName,
-  //     })
-
-  //     // Store additional user data (role) - in a real app, this would go to Firestore
-  //     localStorage.setItem(`user_role_${userCredential.user.uid}`, formData.role)
-
-  //     router.push('/dashboard')
-  //   } catch (err: any) {
-  //     const errorCode = err.code
-  //     let errorMessage = 'Failed to create account. Please try again.'
-
-  //     if (errorCode === 'auth/email-already-in-use') {
-  //       errorMessage = 'This email is already registered. Please sign in instead.'
-  //     } else if (errorCode === 'auth/weak-password') {
-  //       errorMessage = 'Password is too weak. Please use a stronger password.'
-  //     } else if (errorCode === 'auth/invalid-email') {
-  //       errorMessage = 'Invalid email address.'
-  //     } else if (errorCode === 'auth/operation-not-allowed') {
-  //       errorMessage = 'Account creation is not allowed at this time.'
-  //     }
-
-  //     setGlobalError(errorMessage)
-  //     console.error('Registration error:', err)
-  //   } finally {
-  //     setIsLoading(false)
-  //   }
-  // }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setGlobalError("");
     if (!validateForm()) return;
     setIsLoading(true);
 
     try {
-      // 1. إنشاء الحساب في Firebase
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         formData.email,
@@ -136,34 +99,51 @@ export default function RegisterPage() {
         displayName: formData.fullName,
       });
 
-      // 2. تحضير البيانات للباك إند (NestJS)
-      const commonData = {
-        firebaseUid: uid, // مهم جداً للربط
-        name: formData.fullName,
+      localStorage.setItem(`user_role_${uid}`, formData.role);
+
+      const safeUsername = formData.fullName.toLowerCase().replace(/\s+/g, "_");
+      const userPayload = {
+        userID: uid,
+        username: safeUsername,
         email: formData.email,
-        phoneNumber: formData.phoneNumber,
+        role: formData.role,
       };
+
+      await client.post("/users", userPayload);
 
       if (formData.role === "patient") {
         await client.post("/patients", {
-          ...commonData,
+          patientID: uid,
+          name: formData.fullName,
+          email: formData.email,
+          phoneNumber: formData.phoneNumber,
           age: parseInt(formData.age),
           gender: formData.gender,
-          address: "Please update your address", // قيمة افتراضية
+          address: formData.address,
         });
       } else {
         await client.post("/doctors", {
-          ...commonData,
+          doctorID: uid,
+          name: safeUsername,
+          age: parseInt(formData.age),
+          gender: formData.gender,
+          email: formData.email,
+          phoneNumber: formData.phoneNumber,
+          address: formData.address,
           specialty: formData.specialty,
           experience: formData.experience,
-          about: "Consultant " + formData.specialty, // قيمة افتراضية
+          bio: "Consultant " + formData.specialty,
         });
       }
 
-      localStorage.setItem(`user_role_${uid}`, formData.role);
       router.push("/dashboard");
-    } catch (err: any) {
-      setGlobalError(err.response?.data?.message || err.message);
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { message?: string | string[] } } })
+          ?.response?.data?.message ||
+        (err as { message?: string })?.message ||
+        "An error occurred";
+      setGlobalError(Array.isArray(message) ? message[0] : message);
     } finally {
       setIsLoading(false);
     }
@@ -361,65 +341,131 @@ export default function RegisterPage() {
 
             {/* for patient*/}
             {formData.role === "patient" && (
-              <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">
-                    Age
-                  </label>
-                  <Input
-                    name="age"
-                    type="number"
-                    placeholder="25"
-                    value={formData.age}
-                    onChange={handleChange}
-                    required
-                  />
+              <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">
+                      Age
+                    </label>
+                    <Input
+                      name="age"
+                      type="number"
+                      placeholder="25"
+                      value={formData.age}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">
+                      Gender
+                    </label>
+                    <select
+                      name="gender"
+                      value={formData.gender}
+                      onChange={handleChange}
+                      className="w-full h-10 px-3 rounded-md border border-input bg-secondary/30 focus:ring-1 focus:ring-primary outline-none"
+                    >
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-foreground">
-                    Gender
+                    Address
                   </label>
-                  <select
-                    name="gender"
-                    value={formData.gender}
+                  <Input
+                    name="address"
+                    type="text"
+                    placeholder="Enter your address"
+                    value={formData.address}
                     onChange={handleChange}
-                    className="w-full h-10 px-3 rounded-md border border-input bg-secondary/30 focus:ring-1 focus:ring-primary outline-none"
-                  >
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
-                  </select>
+                    required
+                  />
+                  {errors.address && (
+                    <p className="text-xs text-destructive">{errors.address}</p>
+                  )}
                 </div>
               </div>
             )}
 
             {/* for doctor*/}
             {formData.role === "doctor" && (
-              <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">
-                    Specialty
-                  </label>
-                  <Input
-                    name="specialty"
-                    placeholder="e.g. Cardiology"
-                    value={formData.specialty}
-                    onChange={handleChange}
-                    required
-                  />
+              <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">
+                      Age
+                    </label>
+                    <Input
+                      name="age"
+                      type="number"
+                      placeholder="35"
+                      value={formData.age}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">
+                      Gender
+                    </label>
+                    <select
+                      name="gender"
+                      value={formData.gender}
+                      onChange={handleChange}
+                      className="w-full h-10 px-3 rounded-md border border-input bg-secondary/30 focus:ring-1 focus:ring-primary outline-none"
+                    >
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-foreground">
-                    Experience (Years)
+                    Address
                   </label>
                   <Input
-                    name="experience"
-                    type="number"
-                    placeholder="5"
-                    value={formData.experience}
+                    name="address"
+                    type="text"
+                    placeholder="Clinic or home address"
+                    value={formData.address}
                     onChange={handleChange}
                     required
                   />
+                  {errors.address && (
+                    <p className="text-xs text-destructive">{errors.address}</p>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">
+                      Specialty
+                    </label>
+                    <Input
+                      name="specialty"
+                      placeholder="e.g. Cardiology"
+                      value={formData.specialty}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">
+                      Experience (Years)
+                    </label>
+                    <Input
+                      name="experience"
+                      type="number"
+                      placeholder="5"
+                      value={formData.experience}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
                 </div>
               </div>
             )}
