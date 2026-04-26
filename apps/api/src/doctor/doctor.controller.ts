@@ -22,14 +22,13 @@ export class DoctorController {
   }
 
   @Get()
-  findAll() {
+  findAll(@Query('search') query?: string) {
+    if (query) {
+      return this.doctorService.search(query);
+    }
     return this.doctorService.findAll();
   }
 
-  @Get()
-  search(@Query('sreach') query: string) {
-    return this.doctorService.search(query);
-  }
 
   @Get(':id')
   findOne(@Param('id') id: string) {

@@ -4,7 +4,6 @@ import { ILike, Repository } from 'typeorm';
 import { Doctor } from './entities/doctor.entity';
 import { CreateDoctorDto } from './dto/create-doctor.dto';
 import { UpdateDoctorDto } from './dto/update-doctor.dto';
-import { Patient } from 'src/patient/entities/patient.entity';
 
 @Injectable()
 export class DoctorService {
@@ -30,7 +29,7 @@ export class DoctorService {
       { name: ILike(`%${query}%`) },
       { specialty: ILike(`%${query}%`) },
     ],
-    take: 10,
+    take: 20,
   });
 }
 
@@ -42,13 +41,6 @@ export class DoctorService {
     return doctor;
   }
 
-  // async findDoctorPatient(id: string): Promise<Patient> {
-  //   const doctorPatient = await this.doctorRepository.find({
-  //     where: { patientID: id },
-  //   });
-  //   if (!doctorPatient) throw new NotFoundException('Doctor not found');
-  //   return doctorPatient;
-  // }
 
   async update(id: string, updateDoctorDto: UpdateDoctorDto): Promise<Doctor> {
     await this.doctorRepository.update(id, updateDoctorDto);

@@ -25,7 +25,7 @@ import { UserModule } from './user/user.module.js';
       database: process.env.DB_NAME ?? 'eghealthcare',
       autoLoadEntities: true,
       synchronize: true,
-      dropSchema: true,
+      // dropSchema: true,
     }),
     DoctorModule,
     AppointmentModule,
