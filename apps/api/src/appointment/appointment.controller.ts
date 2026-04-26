@@ -52,6 +52,7 @@ export class AppointmentController {
 
     return this.appointmentService.findAll();
   }
+  
 
   @Get(':id')
   findOne(@Param('id') id: number) {

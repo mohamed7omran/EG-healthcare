@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 import { Doctor } from './entities/doctor.entity';
 import { CreateDoctorDto } from './dto/create-doctor.dto';
 import { UpdateDoctorDto } from './dto/update-doctor.dto';
@@ -21,6 +21,18 @@ export class DoctorService {
   findAll(): Promise<Doctor[]> {
     return this.doctorRepository.find();
   }
+
+  search(query: string): Promise<Doctor[]> {
+  if (!query.trim()) return Promise.resolve([]);
+
+  return this.doctorRepository.find({
+    where: [
+      { name: ILike(`%${query}%`) },
+      { specialty: ILike(`%${query}%`) },
+    ],
+    take: 10,
+  });
+}
 
   async findOne(id: string): Promise<Doctor> {
     const doctor = await this.doctorRepository.findOne({

@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { DoctorService } from './doctor.service';
 import { CreateDoctorDto } from './dto/create-doctor.dto';
@@ -23,6 +24,11 @@ export class DoctorController {
   @Get()
   findAll() {
     return this.doctorService.findAll();
+  }
+
+  @Get()
+  search(@Query('sreach') query: string) {
+    return this.doctorService.search(query);
   }
 
   @Get(':id')

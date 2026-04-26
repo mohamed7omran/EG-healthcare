@@ -99,6 +99,7 @@ export class AppointmentService {
     return appointment;
   }
 
+
   async update(id: number, dto: UpdateAppointmentDto): Promise<Appointment> {
     const appointment = await this.findOne(id);
 
