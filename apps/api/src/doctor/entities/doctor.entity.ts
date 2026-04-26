@@ -40,10 +40,7 @@ export class Doctor {
   @Column()
   address: string;
 
-  @Column()
-  role: string;
-
-  @Column()
+  @Column({ nullable: true })
   specialty!: string;
 
   @Column({ nullable: true })

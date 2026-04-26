@@ -1,3 +1,19 @@
+/**
+ * @file AppointmentController
+ * @description Manages API endpoints for medical appointments and doctor dashboards.
+ * * @logic_structure:
+ * 1. Specialized Endpoints (Doctor Dashboard):
+ * - GET /appointments/doctor/:id/current -> Optimized for today's tasks (Pending status, sorted).
+ * - GET /appointments/doctor/:id/patients -> Returns a unique (DISTINCT) list of patients for the doctor's ledger.
+ * * 2. General Purpose Endpoints (Legacy/Admin):
+ * - GET /appointments -> Uses query params (doctorID/patientID) but lacks optimization.
+ * - Note: These are kept for backward compatibility but are NOT recommended for specialized dashboard views
+ * due to data redundancy and lack of filtering.
+ * * @performance_note:
+ * - Direct filtering by ID in specific paths is preferred over generic Query Parameters
+ * to ensure better scalability and cleaner Role-Based Access Control (RBAC).
+ * * @tech_stack: NestJS, TypeORM, PostgreSQL.
+ */
 import {
   Controller,
   Get,
@@ -22,7 +38,10 @@ export class AppointmentController {
   }
 
   @Get()
-  find(@Query('doctorID') doctorID?: string,@Query('patientID') patientID?: string,) {
+  find(
+    @Query('doctorID') doctorID?: string,
+    @Query('patientID') patientID?: string,
+  ) {
     if (doctorID) {
       return this.appointmentService.findByDoctorId(doctorID);
     }

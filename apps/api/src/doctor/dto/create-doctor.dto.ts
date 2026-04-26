@@ -1,4 +1,12 @@
-import { IsString, IsOptional,IsNotEmpty, IsNumber, IsEnum, IsPhoneNumber, IsEmail } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsNotEmpty,
+  IsNumber,
+  IsEnum,
+  IsPhoneNumber,
+  IsEmail,
+} from 'class-validator';
 import { Gender } from '../entities/doctor.entity';
 import { Type } from 'class-transformer';
 
@@ -18,17 +26,14 @@ export class CreateDoctorDto {
 
   @IsEnum(Gender)
   gender: Gender;
-  
-@ IsPhoneNumber()
+
+  // @IsPhoneNumber()
+  @IsString()
   phoneNumber: string;
 
   @IsNotEmpty()
   @IsEmail()
   email: string;
-
-  @IsNotEmpty()
-  @IsString()
-  role: string;
 
   @IsNotEmpty()
   @IsString()
@@ -38,7 +43,7 @@ export class CreateDoctorDto {
   @IsString()
   avatar?: string;
 
-  @IsOptional() 
+  @IsOptional()
   @IsString()
   specialty: string;
 

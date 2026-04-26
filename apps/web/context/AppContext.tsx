@@ -37,6 +37,8 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const ROLE_STORAGE_KEY = (uid: string) => `user_role_${uid}`;
+const normalizeRole = (value: string | undefined): UserRole =>
+  value === "doctor" ? "doctor" : "patient";
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -56,21 +58,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
-      // if (firebaseUser) {
-      //   const storedRole = localStorage.getItem(ROLE_STORAGE_KEY(firebaseUser.uid));
-      //   setRole((storedRole === 'doctor' ? 'doctor' : 'patient') as UserRole);
-      // }
+
       if (firebaseUser) {
         try {
-          const { data } = await client.get(
-            `/users/by-firebase/${firebaseUser.uid}`,
+          const { data } = await client.get(`/users/${firebaseUser.uid}`);
+          const resolvedRole = normalizeRole(data?.role);
+          setRole(resolvedRole);
+          localStorage.setItem(
+            ROLE_STORAGE_KEY(firebaseUser.uid),
+            resolvedRole,
           );
-
-          setRole("doctor");
         } catch (err) {
           console.error("Failed to load role", err);
-          setRole("doctor");
+          const storedRole = localStorage.getItem(
+            ROLE_STORAGE_KEY(firebaseUser.uid),
+          );
+          setRole(normalizeRole(storedRole ?? undefined));
         }
+      } else {
+        setRole("patient");
       }
       setAuthLoading(false);
     });
@@ -83,16 +89,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await firebaseSignOut(auth);
   };
 
-  const addAppointment = (payload: any) => {
-    createMutation.mutate(payload);
+  const addAppointment = (appointment: Appointment) => {
+    createMutation.mutate(appointment);
   };
-
-  // const updateAppointment = (id: string, updates: Partial<Appointment>) => {
-  //   setAppointments(prev =>
-  //     prev.map(apt => (apt.id === id ? { ...apt, ...updates } : apt))
-  //   );
-  // };
-
   const addChatMessage = (message: ChatMessage) => {
     setChatMessages((prev) => [...prev, message]);
   };
