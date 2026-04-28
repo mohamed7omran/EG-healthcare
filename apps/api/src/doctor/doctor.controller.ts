@@ -7,10 +7,12 @@ import {
   Param,
   Delete,
   Query,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { DoctorService } from './doctor.service';
 import { CreateDoctorDto } from './dto/create-doctor.dto';
 import { UpdateDoctorDto } from './dto/update-doctor.dto';
+import { Doctor } from './entities/doctor.entity';
 
 @Controller('doctors')
 export class DoctorController {
@@ -22,13 +24,17 @@ export class DoctorController {
   }
 
   @Get()
-  findAll(@Query('search') query?: string) {
-    if (query) {
-      return this.doctorService.search(query);
-    }
-    return this.doctorService.findAll();
-  }
+  async findAll(@Query('search') query?: string): Promise<Doctor[]> {
+    const result: unknown = query
+      ? await this.doctorService.search(query)
+      : await this.doctorService.findAll();
 
+    if (!Array.isArray(result)) {
+      throw new InternalServerErrorException('Invalid doctors response');
+    }
+
+    return result as Doctor[];
+  }
 
   @Get(':id')
   findOne(@Param('id') id: string) {

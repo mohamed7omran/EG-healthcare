@@ -23,10 +23,12 @@ import {
   Param,
   Delete,
   Query,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { AppointmentService } from './appointment.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
+import { Patient } from '../patient/entities/patient.entity';
 
 @Controller('appointments')
 export class AppointmentController {
@@ -52,13 +54,18 @@ export class AppointmentController {
 
     return this.appointmentService.findAll();
   }
-  
-    @Get('doctors/:id/patients')
-  findPatientsByDoctorId(@Param('id') id: string){
 
-    return this.appointmentService.findPatientsByDoctorId(id)
+  @Get('doctors/:id/patients')
+  async findPatientsByDoctorId(@Param('id') id: string): Promise<Patient[]> {
+    const result: unknown =
+      await this.appointmentService.findPatientsByDoctorId(id);
+
+    if (!Array.isArray(result)) {
+      throw new InternalServerErrorException('Invalid patients response');
+    }
+
+    return result as Patient[];
   }
-
 
   @Get(':id')
   findOne(@Param('id') id: number) {

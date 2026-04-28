@@ -1,6 +1,5 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
   UpdateDateColumn,
@@ -17,7 +16,7 @@ export enum Gender {
 @Entity()
 export class Doctor {
   @PrimaryColumn()
-  doctorID!: String;
+  doctorID!: string;
 
   @Column()
   name!: string;

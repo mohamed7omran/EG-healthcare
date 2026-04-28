@@ -4,11 +4,11 @@ import { AppointmentStatus } from '../entities/appointment.entity';
 export class CreateAppointmentDto {
   @IsNotEmpty()
   @IsString()
-  doctorID: String;
+  doctorID: string;
 
   @IsNotEmpty()
   @IsString()
-  patientID: String;
+  patientID: string;
 
   @IsNotEmpty()
   @IsDateString()

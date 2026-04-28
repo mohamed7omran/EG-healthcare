@@ -22,16 +22,16 @@ export class DoctorService {
   }
 
   search(query: string): Promise<Doctor[]> {
-  if (!query.trim()) return Promise.resolve([]);
+    if (!query.trim()) return Promise.resolve([]);
 
-  return this.doctorRepository.find({
-    where: [
-      { name: ILike(`%${query}%`) },
-      { specialty: ILike(`%${query}%`) },
-    ],
-    take: 20,
-  });
-}
+    return this.doctorRepository.find({
+      where: [
+        { name: ILike(`%${query}%`) },
+        { specialty: ILike(`%${query}%`) },
+      ],
+      take: 20,
+    });
+  }
 
   async findOne(id: string): Promise<Doctor> {
     const doctor = await this.doctorRepository.findOne({
@@ -40,7 +40,6 @@ export class DoctorService {
     if (!doctor) throw new NotFoundException('Doctor not found');
     return doctor;
   }
-
 
   async update(id: string, updateDoctorDto: UpdateDoctorDto): Promise<Doctor> {
     await this.doctorRepository.update(id, updateDoctorDto);
