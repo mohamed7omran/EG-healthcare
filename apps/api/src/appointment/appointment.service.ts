@@ -57,7 +57,6 @@ export class AppointmentService {
 
     return this.appointmentRepository.save(appointment);
   }
-  
 
   findAll(): Promise<Appointment[]> {
     return this.appointmentRepository.find();
@@ -92,20 +91,21 @@ export class AppointmentService {
     return appointments;
   }
 
-    async findPatientsByDoctorId(id: string): Promise<Patient[]> {
-  const patients = await this.appointmentRepository
-    .createQueryBuilder('appointment')
-    .leftJoinAndSelect('appointment.patient', 'patient')
-    .where('appointment.doctor.doctorID = :id', { id })
-    .groupBy('patient.patientID')
-    .getMany();
+  async findPatientsByDoctorId(id: string): Promise<Patient[]> {
+    const patients = await this.appointmentRepository
+      .createQueryBuilder('appointment')
+      .leftJoinAndSelect('appointment.patient', 'patient')
+      .where('appointment.doctorDoctorID = :id', { id })
+      .distinctOn(['patient.patientID'])
+      .orderBy('patient.patientID')
+      .getMany();
 
-  if (patients.length === 0) {
-    throw new NotFoundException('No patients found for this doctor');
+    if (patients.length === 0) {
+      return [];
+    }
+
+    return patients.map((a) => a.patient);
   }
-
-  return patients.map(a => a.patient);
-}
 
   async findOne(id: number): Promise<Appointment> {
     const appointment = await this.appointmentRepository.findOne({
@@ -114,7 +114,6 @@ export class AppointmentService {
     if (!appointment) throw new NotFoundException('Appointment not found');
     return appointment;
   }
-
 
   async update(id: number, dto: UpdateAppointmentDto): Promise<Appointment> {
     const appointment = await this.findOne(id);

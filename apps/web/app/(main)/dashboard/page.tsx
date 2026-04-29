@@ -6,7 +6,6 @@ import { PatientCard } from "@/components/patients/PatientCard";
 import {
   Calendar,
   Users,
-  Clock,
   TrendingUp,
   Stethoscope,
   Activity,
@@ -15,29 +14,29 @@ import {
   Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
-import { mockPatients } from "@/data/mockData";
 import { useDoctors } from "@/hooks/useDoctors";
+import { useDoctorPatients } from "@/hooks/usePatients";
 
 function PatientDashboard() {
   const { data: doctors = [], isLoading, isError } = useDoctors();
 
   const { appointments } = useApp();
   const upcomingAppointments = appointments
-    .filter((apt) => apt.status === "scheduled")
+    .filter((apt) => apt.status === "Pending")
     .slice(0, 3);
 
   const stats = [
     {
       label: "Upcoming Appointments",
-      value: appointments.filter((a) => a.status === "scheduled").length,
+      value: appointments.filter((a) => a.status === "Pending").length,
       icon: Calendar,
       color: "text-info",
     },
     {
       label: "Completed Visits",
-      value: appointments.filter((a) => a.status === "completed").length,
+      value: appointments.filter((a) => a.status === "Completed").length,
       icon: Activity,
       color: "text-success",
     },
@@ -105,7 +104,7 @@ function PatientDashboard() {
         {upcomingAppointments.length > 0 ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {upcomingAppointments.map((apt) => (
-              <AppointmentCard key={apt.id} appointment={apt} />
+              <AppointmentCard key={apt.appointmentID} appointment={apt} />
             ))}
           </div>
         ) : (
@@ -179,11 +178,16 @@ function PatientDashboard() {
 }
 
 function DoctorDashboard() {
-  const { appointments } = useApp();
+  const { appointments, currentUserId } = useApp();
+  const {
+    data: patients = [],
+    isLoading: isPatientsLoading,
+    isError: isPatientsError,
+  } = useDoctorPatients(currentUserId);
   const todayAppointments = appointments
-    .filter((apt) => apt.status === "scheduled")
+    .filter((apt) => apt.status === "Pending")
     .slice(0, 5);
-
+  console.log("paaaaaaaaaaaaaaaaaaaaaa", patients);
   const stats = [
     {
       label: "Today's Appointments",
@@ -193,13 +197,13 @@ function DoctorDashboard() {
     },
     {
       label: "Total Patients",
-      value: mockPatients.length,
+      value: patients.length,
       icon: Users,
       color: "text-primary",
     },
     {
       label: "Completed Today",
-      value: appointments.filter((a) => a.status === "completed").length,
+      value: appointments.filter((a) => a.status === "Completed").length,
       icon: TrendingUp,
       color: "text-success",
     },
@@ -242,7 +246,7 @@ function DoctorDashboard() {
         <div>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-display text-xl font-semibold text-foreground">
-              Today's Appointments
+              Today&apos;s Appointments
             </h2>
             <Link href="/appointments">
               <Button variant="ghost" size="sm" className="group">
@@ -253,7 +257,11 @@ function DoctorDashboard() {
           </div>
           <div className="space-y-4">
             {todayAppointments.map((apt) => (
-              <AppointmentCard key={apt.id} appointment={apt} showPatient />
+              <AppointmentCard
+                key={apt.appointmentID}
+                appointment={apt}
+                showPatient
+              />
             ))}
           </div>
         </div>
@@ -272,9 +280,29 @@ function DoctorDashboard() {
             </Link>
           </div>
           <div className="space-y-4">
-            {mockPatients.slice(0, 2).map((patient) => (
-              <PatientCard key={patient.id} patient={patient} />
-            ))}
+            {isPatientsLoading ? (
+              <div className="flex h-24 items-center justify-center">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              </div>
+            ) : isPatientsError ? (
+              <Card>
+                <CardContent className="py-6 text-sm text-muted-foreground text-center">
+                  Failed to load patients.
+                </CardContent>
+              </Card>
+            ) : patients.length === 0 ? (
+              <Card>
+                <CardContent className="py-6 text-sm text-muted-foreground text-center">
+                  No patients found yet.
+                </CardContent>
+              </Card>
+            ) : (
+              patients
+                .slice(0, 2)
+                .map((patient) => (
+                  <PatientCard key={patient.patientID} patient={patient} />
+                ))
+            )}
           </div>
         </div>
       </div>

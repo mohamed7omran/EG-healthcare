@@ -2,7 +2,7 @@ import { Patient } from '@/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { User, FileText, ArrowRight } from 'lucide-react';
+import { FileText, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 interface PatientCardProps {
@@ -10,6 +10,12 @@ interface PatientCardProps {
 }
 
 export function PatientCard({ patient }: PatientCardProps) {
+  const patientId = patient.patientID ?? patient.id ?? "";
+  const medicalSummaryText =
+    typeof patient.medicalSummary === "string"
+      ? patient.medicalSummary
+      : patient.medicalHistory || "No medical summary available.";
+
   return (
     <div className="medical-card-hover group">
       <div className="flex items-start gap-4">
@@ -42,12 +48,12 @@ export function PatientCard({ patient }: PatientCardProps) {
           Medical Summary
         </div>
         <p className="text-sm text-muted-foreground line-clamp-2">
-          {patient.medicalSummary}
+          {medicalSummaryText}
         </p>
       </div>
 
       <div className="mt-4 flex justify-end">
-        <Link href={`/Patients/${patient.id}`}>
+        <Link href={`/Patients/${patientId}`}>
           <Button variant="ghost" size="sm" className="group/btn">
             View Full Profile
             <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover/btn:translate-x-1" />

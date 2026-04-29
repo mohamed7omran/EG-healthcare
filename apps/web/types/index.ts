@@ -54,15 +54,19 @@ export interface ChatbotMessage {
 // =======================================================================================
 
 export interface Patient {
-  patientID: number;
+  patientID: string;
+  id?: string;
   name: string;
   age: number;
   gender: 'Male' | 'Female' | 'Other';
-  phoneNumber: string;
-  email: string;
-  address: string;
+  avatar?: string;
+  phoneNumber?: string;
+  email?: string;
+  address?: string;
   medicalHistory?: string;
-  medicalSummary?: {
+  medicalSummary?:
+    | string
+    | {
     bloodType?: string;
     allergies?: string;
     lastVisit?: string;
