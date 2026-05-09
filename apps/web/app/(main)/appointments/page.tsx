@@ -5,21 +5,32 @@ import { useApp } from "@/context/AppContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Clock, CheckCircle2, XCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useAppointmentsData } from "@/hooks/useAppointments";
 
 export default function Appointments() {
-  const { appointments, role } = useApp();
+  const { role, currentUserId } = useApp();
+  const { appointments, isLoading } = useAppointmentsData({
+    patientID: role === "patient" ? currentUserId : undefined,
+    doctorID: role === "doctor" ? currentUserId : undefined,
+    enabled: !!currentUserId,
+  });
+  console.log("all appointments", appointments);
 
   const scheduledAppointments = appointments.filter(
-    (a) => a.status === "scheduled",
+    (a) => a.status === "Pending" || a.status === "Scheduled",
   );
+
   const completedAppointments = appointments.filter(
-    (a) => a.status === "completed",
+    (a) => a.status === "Completed",
   );
+
   const cancelledAppointments = appointments.filter(
-    (a) => a.status === "cancelled",
+    (a) => a.status === "Cancelled",
   );
 
   const showPatient = role === "doctor";
+
+  if (isLoading) return <p>Loading...</p>;
 
   const EmptyState = ({
     icon: Icon,
@@ -119,7 +130,7 @@ export default function Appointments() {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {scheduledAppointments.map((apt) => (
                 <AppointmentCard
-                  key={apt.id}
+                  key={apt.appointmentID}
                   appointment={apt}
                   showPatient={showPatient}
                 />
@@ -139,7 +150,7 @@ export default function Appointments() {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {completedAppointments.map((apt) => (
                 <AppointmentCard
-                  key={apt.id}
+                  key={apt.appointmentID}
                   appointment={apt}
                   showPatient={showPatient}
                 />
@@ -159,7 +170,7 @@ export default function Appointments() {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {cancelledAppointments.map((apt) => (
                 <AppointmentCard
-                  key={apt.id}
+                  key={apt.appointmentID}
                   appointment={apt}
                   showPatient={showPatient}
                 />

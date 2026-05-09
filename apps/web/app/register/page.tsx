@@ -124,7 +124,7 @@ export default function RegisterPage() {
       } else {
         await client.post("/doctors", {
           doctorID: uid,
-          name: safeUsername,
+          name: formData.fullName,
           age: parseInt(formData.age),
           gender: formData.gender,
           email: formData.email,

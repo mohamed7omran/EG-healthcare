@@ -3,7 +3,6 @@ import { client } from "@/lib/axios";
 import { Patient } from "@/types";
 
 const fetchDoctorPatients = async (doctorId: string): Promise<Patient[]> => {
-  console.log("Fetching for ID:", doctorId);
   const response = await client.get(
     `/appointments/doctors/${doctorId}/patients`,
   );

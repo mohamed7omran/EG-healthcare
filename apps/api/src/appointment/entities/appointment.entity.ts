@@ -39,6 +39,9 @@ export class Appointment {
   @Column()
   type: string;
 
+  @Column({ type: 'text', nullable: true })
+  report?: string | null;
+
   @Column({
     type: 'enum',
     enum: AppointmentStatus,

@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { DoctorCard } from "@/components/doctors/DoctorCard";
 import { BookingModal } from "@/components/doctors/BookingModal";
-import { Doctor } from "@/types"; 
-import { useDoctors } from "@/hooks/useDoctors"; 
+import { Doctor } from "@/types";
+import { useDoctors } from "@/hooks/useDoctors";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -13,10 +13,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Filter, Loader2, AlertCircle } from "lucide-react"; // أيقونات إضافية
+import { Search, Filter, Loader2, AlertCircle } from "lucide-react";
 
 export default function Doctors() {
-  // 1. استخدام الـ Hook لجلب البيانات
   const { data: doctors = [], isLoading, isError, error } = useDoctors();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -24,13 +23,11 @@ export default function Doctors() {
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
 
-  // 2. استخراج التخصصات ديناميكياً من البيانات القادمة من الـ API
   const specialties = [
     "All Specialties",
     ...Array.from(new Set(doctors.map((d) => d.specialty))),
   ];
 
-  // 3. تصفية البيانات (Client-Side Filtering)
   const filteredDoctors = doctors.filter((doctor) => {
     const matchesSearch =
       doctor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -46,7 +43,6 @@ export default function Doctors() {
     setIsBookingOpen(true);
   };
 
-  // 4. معالجة حالة التحميل والخطأ
   if (isLoading) {
     return (
       <div className="flex h-[50vh] w-full items-center justify-center">
@@ -61,7 +57,9 @@ export default function Doctors() {
       <div className="flex h-[50vh] w-full flex-col items-center justify-center text-destructive">
         <AlertCircle className="h-10 w-10 mb-2" />
         <p>Error loading doctors.</p>
-        <p className="text-sm text-muted-foreground">{(error as Error).message}</p>
+        <p className="text-sm text-muted-foreground">
+          {(error as Error).message}
+        </p>
       </div>
     );
   }
@@ -116,7 +114,7 @@ export default function Doctors() {
       <div className="grid gap-6 lg:grid-cols-2">
         {filteredDoctors.map((doctor) => (
           <DoctorCard
-            key={doctor.doctorID} // هام: الـ API يستخدم doctorID 
+            key={doctor.doctorID}
             doctor={doctor}
             onBookAppointment={handleBookAppointment}
           />

@@ -1,18 +1,45 @@
 "use client";
 
 import { PatientCard } from "@/components/patients/PatientCard";
-import { mockPatients } from "@/data/mockData";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, Users } from "lucide-react";
+import { Loader2, Search, Users } from "lucide-react";
 import { useState } from "react";
+import { useDoctorPatients } from "@/hooks/usePatients";
+import { useApp } from "@/context/AppContext";
 
 export default function Patients() {
   const [searchQuery, setSearchQuery] = useState("");
+  const { currentUserId } = useApp();
 
-  const filteredPatients = mockPatients.filter((patient) =>
+  const {
+    data: patients = [],
+    isLoading,
+    isError,
+    error,
+  } = useDoctorPatients(currentUserId);
+
+  console.log("all patients", patients);
+  const filteredPatients = patients.filter((patient) =>
     patient.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
+
+  if (isLoading) {
+    return (
+      <div className="flex h-96 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2">Loading patients...</span>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="p-8 text-center text-red-500">
+        <p>Error: {(error as any)?.message || "Failed to fetch patients"}</p>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -35,7 +62,7 @@ export default function Patients() {
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">
-                {mockPatients.length}
+                {patients.length}
               </p>
               <p className="text-sm text-muted-foreground">Total Patients</p>
             </div>
