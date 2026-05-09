@@ -52,6 +52,7 @@ export class AppointmentService {
       type: dto.type,
       date: dto.date,
       time: dto.time,
+      report: dto.report ?? null,
       status: dto.status,
     });
 
@@ -136,6 +137,8 @@ export class AppointmentService {
 
     if (dto.date) appointment.date = dto.date;
     if (dto.time) appointment.time = dto.time;
+    if (dto.type) appointment.type = dto.type;
+    if (dto.report !== undefined) appointment.report = dto.report;
     if (dto.status) appointment.status = dto.status;
 
     return this.appointmentRepository.save(appointment);

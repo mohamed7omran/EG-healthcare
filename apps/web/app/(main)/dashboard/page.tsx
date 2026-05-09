@@ -18,6 +18,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
 import { useDoctors } from "@/hooks/useDoctors";
 import { useDoctorPatients } from "@/hooks/usePatients";
+import { useDoctorPatientsAppointments } from "@/hooks/useAppointments";
 
 function PatientDashboard() {
   const { data: doctors = [], isLoading, isError } = useDoctors();
@@ -178,16 +179,19 @@ function PatientDashboard() {
 }
 
 function DoctorDashboard() {
-  const { appointments, currentUserId } = useApp();
+  console.log("DoctorDashboard rendered");
+  const { currentUserId } = useApp();
   const {
     data: patients = [],
     isLoading: isPatientsLoading,
     isError: isPatientsError,
   } = useDoctorPatients(currentUserId);
+  const { data: appointments = [] } =
+    useDoctorPatientsAppointments(currentUserId);
   const todayAppointments = appointments
     .filter((apt) => apt.status === "Pending")
     .slice(0, 5);
-  console.log("paaaaaaaaaaaaaaaaaaaaaa", patients);
+
   const stats = [
     {
       label: "Today's Appointments",

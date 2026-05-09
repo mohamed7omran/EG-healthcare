@@ -27,7 +27,11 @@ interface AppContextType {
   appointments: Appointment[];
   isAppointmentsLoading: boolean;
   addAppointment: (appointment: Appointment) => void;
-  updateAppointment: (id: string, updates: Partial<Appointment>) => void;
+  updateAppointment: (
+    appointmentID: number,
+    updates: Partial<Appointment>,
+    options?: { onSuccess?: () => void; onError?: () => void },
+  ) => void;
   chatMessages: ChatMessage[];
   addChatMessage: (message: ChatMessage) => void;
   aiResults: AIAnalysisResult[];
@@ -37,18 +41,26 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const ROLE_STORAGE_KEY = (uid: string) => `user_role_${uid}`;
-const normalizeRole = (value: string | undefined): UserRole =>
-  value === "doctor" ? "doctor" : "patient";
+const normalizeRole = (value: string | undefined): UserRole => {
+  if (!value) return "patient";
+  return value.trim().toLowerCase() === "doctor" ? "doctor" : "patient";
+};
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [role, setRole] = useState<UserRole>("patient");
+  const currentUserId = user?.uid ?? "";
   const {
-    data: appointments = [],
+    appointments = [],
     isLoading: isAppointmentsLoading,
-    createMutation,
-  } = useAppointmentsData();
+    createAppointment,
+    updateAppointment,
+  } = useAppointmentsData({
+    patientID: role === "patient" ? currentUserId : undefined,
+    doctorID: role === "doctor" ? currentUserId : undefined,
+    enabled: !!currentUserId,
+  });
   const [chatMessages, setChatMessages] =
     useState<ChatMessage[]>(mockChatMessages);
   const [aiResults, setAIResults] = useState<AIAnalysisResult[]>(
@@ -83,14 +95,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  const currentUserId = user?.uid ?? "";
-
   const signOut = async () => {
     await firebaseSignOut(auth);
   };
 
   const addAppointment = (appointment: Appointment) => {
-    createMutation.mutate(appointment);
+    createAppointment(appointment);
   };
   const addChatMessage = (message: ChatMessage) => {
     setChatMessages((prev) => [...prev, message]);
@@ -112,7 +122,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
         appointments,
         isAppointmentsLoading,
         addAppointment,
-        updateAppointment: () => {},
+        updateAppointment: (appointmentID, updates, options) =>
+          updateAppointment(
+            { appointmentID, payload: updates },
+            {
+              onSuccess: options?.onSuccess,
+              onError: options?.onError,
+            },
+          ),
         chatMessages,
         addChatMessage,
         aiResults,

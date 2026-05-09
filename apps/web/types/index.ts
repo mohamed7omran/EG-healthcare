@@ -132,4 +132,5 @@ export interface Appointment {
   time: string;
   status: 'Pending' | 'Completed' | 'Cancelled';
   type: string;
+  report?: string | null;
 }
