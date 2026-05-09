@@ -36,9 +36,9 @@ export class AppointmentService {
     @InjectRepository(Patient)
     private patientRepository: Repository<Patient>,
     @InjectRepository(User)
-    private readonly userRepository:  Repository<User>,
+    private readonly userRepository: Repository<User>,
     private readonly notificationService: NotificationService,
-  ) {}
+  ) { }
 
   async create(dto: CreateAppointmentDto): Promise<Appointment> {
     const doctor = await this.doctorRepository.findOne({
@@ -47,7 +47,7 @@ export class AppointmentService {
     const patient = await this.patientRepository.findOne({
       where: { patientID: dto.patientID },
     });
-    
+
     if (!doctor) throw new NotFoundException('Doctor not found');
     const user = await this.userRepository.findOne({
       where: { userID: doctor.doctorID },
@@ -65,11 +65,17 @@ export class AppointmentService {
       status: dto.status,
     });
 
+    const formattedDate = new Date(appointment.date).toLocaleString('en-GB', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
     await this.notificationService.sendNotification(
       user.fcmToken,
-      // 'f0KW4QJGSu-EAfPHM6enVC:APA91bHK2gEGYgnqfYq0pJODDLiwnOtJorokzToVfhsr_O2Fkx-ieQNR7M0EXdNpkH-6knPhCnKJliNLtq0XvLrkDwvlqkTYqTqIVq0urPEMF5OQjbMn6PM',
       'New Appointment',
-      'There is a new pending appointment for '+patient.name + "\n on " +appointment.date,
+      `There is a new pending appointment for ${patient.name}\nOn ${formattedDate}`,
     );
 
     return this.appointmentRepository.save(appointment);
@@ -111,9 +117,9 @@ export class AppointmentService {
   async findPatientsByDoctorId(id: string): Promise<Patient[]> {
     return this.patientRepository
       .createQueryBuilder('patient')
-      .innerJoin('patient.appointments', 'appointment') 
+      .innerJoin('patient.appointments', 'appointment')
       .where('appointment.doctorDoctorID = :id', { id })
-      .distinct(true) 
+      .distinct(true)
       .getMany();
   }
 
