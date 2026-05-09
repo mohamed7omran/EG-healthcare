@@ -9,6 +9,7 @@ import { ConfigModule } from '@nestjs/config';
 import { GeminiModule } from './gemini/gemini.module';
 import { AiAnalysisModule } from './ai-analysis/ai-analysis.module';
 import { UserModule } from './user/user.module.js';
+import { NotificationModule } from './notification/notification.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -32,6 +33,7 @@ import { UserModule } from './user/user.module.js';
     GeminiModule,
     AiAnalysisModule,
     UserModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

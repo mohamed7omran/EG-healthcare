@@ -21,9 +21,6 @@ export class Doctor {
   @Column()
   name!: string;
 
-  @Column()
-  fcmToken: string;
-
   @Column({ nullable: true })
   avatar: string;
 

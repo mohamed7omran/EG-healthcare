@@ -12,7 +12,7 @@ export class User {
   userID: string;
 
   @Column()
-  token: string;
+  fcmToken: string;
 
    @Column()
   username: string;

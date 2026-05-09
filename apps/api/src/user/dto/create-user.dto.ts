@@ -7,7 +7,7 @@ export class CreateUserDto {
 
   @IsNotEmpty()
   @IsString()
-  token: string;
+  fcmToken: string;
 
   @IsNotEmpty()
   @IsString()

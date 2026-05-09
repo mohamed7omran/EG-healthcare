@@ -39,4 +39,10 @@ export class UserService {
     const result = await this.userRepository.delete({ userID: id });
     if (result.affected === 0) throw new NotFoundException('User not found');
   }
+
+  async saveToken(id: string, token: string) {
+    await this.userRepository.update(id, {
+      fcmToken: token,
+    });
+  }
 }

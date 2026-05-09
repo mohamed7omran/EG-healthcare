@@ -24,6 +24,7 @@ import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import { Doctor } from '../doctor/entities/doctor.entity';
 import { Patient } from '../patient/entities/patient.entity';
 import { NotificationService } from '../notification/notification.service';
+import { User } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class AppointmentService {
@@ -34,6 +35,8 @@ export class AppointmentService {
     private doctorRepository: Repository<Doctor>,
     @InjectRepository(Patient)
     private patientRepository: Repository<Patient>,
+    @InjectRepository(User)
+    private readonly userRepository:  Repository<User>,
     private readonly notificationService: NotificationService,
   ) {}
 
@@ -44,9 +47,13 @@ export class AppointmentService {
     const patient = await this.patientRepository.findOne({
       where: { patientID: dto.patientID },
     });
-
+    
     if (!doctor) throw new NotFoundException('Doctor not found');
+    const user = await this.userRepository.findOne({
+      where: { userID: doctor.doctorID },
+    });
     if (!patient) throw new NotFoundException('Patient not found');
+    if (!user) throw new NotFoundException('user not found');
 
     const appointment = this.appointmentRepository.create({
       doctor,
@@ -58,7 +65,8 @@ export class AppointmentService {
     });
 
     await this.notificationService.sendNotification(
-      doctor.fcmToken,
+      user.fcmToken,
+      // 'f0KW4QJGSu-EAfPHM6enVC:APA91bHK2gEGYgnqfYq0pJODDLiwnOtJorokzToVfhsr_O2Fkx-ieQNR7M0EXdNpkH-6knPhCnKJliNLtq0XvLrkDwvlqkTYqTqIVq0urPEMF5OQjbMn6PM',
       'New Appointment',
       'There is a new pending appointment for '+patient.name + "\n on " +appointment.date,
     );

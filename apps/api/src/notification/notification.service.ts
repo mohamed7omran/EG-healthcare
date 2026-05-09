@@ -14,6 +14,7 @@ export class NotificationService {
         title,
         body,
       },
+      // data:data,
     });
   }
 }

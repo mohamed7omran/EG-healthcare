@@ -7,7 +7,7 @@ export class UpdateUserDto {
 
   @IsOptional()
   @IsString()
-  token: string;
+  fcmToken: string;
 
   @IsOptional()
   @IsEmail()
