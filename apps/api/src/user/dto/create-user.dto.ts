@@ -7,6 +7,10 @@ export class CreateUserDto {
 
   @IsNotEmpty()
   @IsString()
+  token: string;
+
+  @IsNotEmpty()
+  @IsString()
   username: string;
 
   @IsNotEmpty()

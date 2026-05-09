@@ -23,6 +23,7 @@ import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import { Doctor } from '../doctor/entities/doctor.entity';
 import { Patient } from '../patient/entities/patient.entity';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class AppointmentService {
@@ -33,6 +34,7 @@ export class AppointmentService {
     private doctorRepository: Repository<Doctor>,
     @InjectRepository(Patient)
     private patientRepository: Repository<Patient>,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async create(dto: CreateAppointmentDto): Promise<Appointment> {
@@ -55,6 +57,12 @@ export class AppointmentService {
       report: dto.report ?? null,
       status: dto.status,
     });
+
+    await this.notificationService.sendNotification(
+      doctor.fcmToken,
+      'New Appointment',
+      'There is a new pending appointment for '+patient.name + "\n on " +appointment.date,
+    );
 
     return this.appointmentRepository.save(appointment);
   }
@@ -93,19 +101,12 @@ export class AppointmentService {
   }
 
   async findPatientsByDoctorId(id: string): Promise<Patient[]> {
-    const patients = await this.appointmentRepository
-      .createQueryBuilder('appointment')
-      .leftJoinAndSelect('appointment.patient', 'patient')
+    return this.patientRepository
+      .createQueryBuilder('patient')
+      .innerJoin('patient.appointments', 'appointment') 
       .where('appointment.doctorDoctorID = :id', { id })
-      .distinctOn(['patient.patientID'])
-      .orderBy('patient.patientID')
+      .distinct(true) 
       .getMany();
-
-    if (patients.length === 0) {
-      return [];
-    }
-
-    return patients.map((a) => a.patient);
   }
 
   async findOne(id: number): Promise<Appointment> {

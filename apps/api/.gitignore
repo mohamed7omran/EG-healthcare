@@ -2,6 +2,7 @@
 /dist
 /node_modules
 /build
+src/config/eghealthcare-b1daa-firebase-adminsdk-fbsvc-f24e172a1d.json
 
 # Logs
 logs

@@ -12,6 +12,9 @@ export class User {
   userID: string;
 
   @Column()
+  token: string;
+
+   @Column()
   username: string;
 
   @Column({ unique: true })

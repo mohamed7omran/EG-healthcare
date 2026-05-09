@@ -39,6 +39,10 @@ export class CreateDoctorDto {
   @IsString()
   address: string;
 
+  @IsNotEmpty()
+  @IsString()
+  fcmToken: string;
+
   @IsOptional()
   @IsString()
   avatar?: string;

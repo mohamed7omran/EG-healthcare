@@ -11,6 +11,7 @@ import { Patient } from '../../patient/entities/patient.entity';
 
 export enum AppointmentStatus {
   Pending = 'Pending',
+  Scheduled = 'Scheduled',
   Completed = 'Completed',
   Cancelled = 'Cancelled',
 }
