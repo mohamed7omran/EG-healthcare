@@ -10,6 +10,7 @@ import { GeminiModule } from './gemini/gemini.module';
 import { AiAnalysisModule } from './ai-analysis/ai-analysis.module';
 import { UserModule } from './user/user.module.js';
 import { NotificationModule } from './notification/notification.module';
+import { RagModule } from './rag/rag.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -34,6 +35,7 @@ import { NotificationModule } from './notification/notification.module';
     AiAnalysisModule,
     UserModule,
     NotificationModule,
+    RagModule,
   ],
   controllers: [AppController],
   providers: [AppService],

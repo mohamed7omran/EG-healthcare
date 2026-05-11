@@ -9,7 +9,10 @@ import { NotificationModule } from 'src/notification/notification.module';
 import { User } from 'src/user/entities/user.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Appointment, Doctor, Patient, User,]),NotificationModule],
+  imports: [
+    TypeOrmModule.forFeature([Appointment, Doctor, Patient, User]),
+    NotificationModule,
+  ],
   providers: [AppointmentService],
   controllers: [AppointmentController],
 })
