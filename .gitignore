@@ -5,3 +5,4 @@ dist
 build
 .env
 chroma
+apps/api/src/firebase.json
