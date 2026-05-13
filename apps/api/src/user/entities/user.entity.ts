@@ -14,7 +14,7 @@ export class User {
   @Column()
   fcmToken: string;
 
-   @Column()
+  @Column()
   username: string;
 
   @Column({ unique: true })

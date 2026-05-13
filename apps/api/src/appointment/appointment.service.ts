@@ -38,7 +38,7 @@ export class AppointmentService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly notificationService: NotificationService,
-  ) { }
+  ) {}
 
   async create(dto: CreateAppointmentDto): Promise<Appointment> {
     const doctor = await this.doctorRepository.findOne({
@@ -116,6 +116,15 @@ export class AppointmentService {
       .distinct(true)
       .getMany();
   }
+
+  // async findPatientsByDoctorId(id: string): Promise<Patient[]> {
+  //   return this.patientRepository
+  //     .createQueryBuilder('patient')
+  //     .innerJoin('patient.appointments', 'appointment')
+  //     .where('appointment.doctorDoctorID = :id', { id })
+  //     .distinct(true)
+  //     .getMany();
+  // }
 
   async findOne(id: number): Promise<Appointment> {
     const appointment = await this.appointmentRepository.findOne({
