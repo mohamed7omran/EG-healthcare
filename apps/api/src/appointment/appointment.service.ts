@@ -65,17 +65,11 @@ export class AppointmentService {
       status: dto.status,
     });
 
-    const formattedDate = new Date(appointment.date).toLocaleString('en-GB', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    const formattedDateStr = this.formattedDate(appointment.date);
     await this.notificationService.sendNotification(
       user.fcmToken,
       'New Appointment',
-      `There is a new pending appointment for ${patient.name}\nOn ${formattedDate}`,
+      `There is a new pending appointment for ${patient.name}\nOn ${formattedDateStr}`,
     );
 
     return this.appointmentRepository.save(appointment);
@@ -149,13 +143,36 @@ export class AppointmentService {
       if (!patient) throw new NotFoundException('Patient not found');
       appointment.patient = patient;
     }
-
+    
     if (dto.date) appointment.date = dto.date;
     if (dto.time) appointment.time = dto.time;
     if (dto.type) appointment.type = dto.type;
     if (dto.report !== undefined) appointment.report = dto.report;
-    if (dto.status) appointment.status = dto.status;
 
+    if (dto.status) {
+      appointment.status = dto.status;
+      const user = await this.userRepository.findOne({
+        where: { userID: dto.patientID },
+      });
+      if (!user) throw new NotFoundException('user not found');
+      
+      const formattedDateStr = this.formattedDate(appointment.date);
+      if (dto.status == 'Scheduled') {
+        await this.notificationService.sendNotification(
+          user.fcmToken,
+          'Appointment',
+          `Your appointment has been scheduled by Dr. ${appointment.doctor.name}\n On ${formattedDateStr}`,
+        );
+      }
+      if (dto.status == 'Completed') {
+        await this.notificationService.sendNotification(
+          user.fcmToken,
+          'Appointment',
+          `Dr. ${appointment.doctor.name} has completed your appointment \n at ${this.formattedDate(new Date().toISOString())}`,
+        );
+      }
+
+    } 
     return this.appointmentRepository.save(appointment);
   }
 
@@ -163,5 +180,16 @@ export class AppointmentService {
     const result = await this.appointmentRepository.delete(id);
     if (result.affected === 0)
       throw new NotFoundException('Appointment not found');
+  }
+
+  formattedDate(date:string):string{
+     const formattedDate = new Date(date).toLocaleString('en-GB', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    return formattedDate;
   }
 }
