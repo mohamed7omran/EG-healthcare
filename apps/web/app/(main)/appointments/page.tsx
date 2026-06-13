@@ -5,16 +5,9 @@ import { useApp } from "@/context/AppContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Clock, CheckCircle2, XCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { useAppointmentsData } from "@/hooks/useAppointments";
 
 export default function Appointments() {
-  const { role, currentUserId } = useApp();
-  const { appointments, isLoading } = useAppointmentsData({
-    patientID: role === "patient" ? currentUserId : undefined,
-    doctorID: role === "doctor" ? currentUserId : undefined,
-    enabled: !!currentUserId,
-  });
-  console.log("all appointments", appointments);
+  const { role, appointments, isAppointmentsLoading } = useApp();
 
   const scheduledAppointments = appointments.filter(
     (a) => a.status === "Pending" || a.status === "Scheduled",
@@ -30,7 +23,7 @@ export default function Appointments() {
 
   const showPatient = role === "doctor";
 
-  if (isLoading) return <p>Loading...</p>;
+  if (isAppointmentsLoading) return <p>Loading...</p>;
 
   const EmptyState = ({
     icon: Icon,

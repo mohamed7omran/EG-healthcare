@@ -11,7 +11,7 @@ export class User {
   @PrimaryColumn()
   userID: string;
 
-  @Column()
+  @Column({ nullable: true })
   fcmToken: string;
 
   @Column()

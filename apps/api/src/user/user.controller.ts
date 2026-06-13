@@ -40,10 +40,9 @@ export class UserController {
   remove(@Param('id') id: string) {
     return this.userService.remove(id);
   }
-  
-  @Post('save-fcm-token/:id')
-    saveToken(@Body('token') fcmToken:string,@Param('id') id:string,) {
 
-    return this.userService.saveToken( id,fcmToken);
+  @Post('save-fcm-token/:id')
+  saveToken(@Body('token') fcmToken: string, @Param('id') id: string) {
+    return this.userService.saveToken(id, fcmToken);
   }
 }

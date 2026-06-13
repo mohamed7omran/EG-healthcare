@@ -1,14 +1,38 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit, ServiceUnavailableException } from '@nestjs/common';
 import { ChatOpenAI, OpenAIEmbeddings } from '@langchain/openai';
 import { Chroma } from '@langchain/community/vectorstores/chroma';
 
 @Injectable()
 export class RagService implements OnModuleInit {
-  private vectorStore: Chroma;
-  private chatModel: ChatOpenAI;
+  private readonly logger = new Logger(RagService.name);
+  private vectorStore: Chroma | null = null;
+  private chatModel: ChatOpenAI | null = null;
+  private initPromise: Promise<void> | null = null;
 
   async onModuleInit() {
-    // إعداد الموديلات من LM Studio
+    try {
+      await this.ensureInitialized();
+    } catch (err) {
+      this.logger.warn(
+        'RAG initialization skipped — LM Studio/Chroma unavailable. Core API will keep running.',
+      );
+      this.logger.debug(err);
+    }
+  }
+
+  private async ensureInitialized() {
+    if (this.vectorStore && this.chatModel) return;
+    if (this.initPromise) return this.initPromise;
+
+    this.initPromise = this.initialize();
+    try {
+      await this.initPromise;
+    } finally {
+      this.initPromise = null;
+    }
+  }
+
+  private async initialize() {
     const embeddings = new OpenAIEmbeddings({
       apiKey: 'no-key',
       configuration: { baseURL: 'http://localhost:1234/v1' },
@@ -18,16 +42,14 @@ export class RagService implements OnModuleInit {
     this.chatModel = new ChatOpenAI({
       apiKey: 'no-key',
       configuration: { baseURL: 'http://localhost:1234/v1' },
-      modelName: 'qwen/qwen3.5-9b',
-      temperature: 0.3, // خليها قليلة عشان الدقة الطبية
+      modelName: 'qwen/qwen3-8b',
+      temperature: 0.3,
     });
 
-    // الربط مع السيرفر اللي إنت مشغله (localhost:8000)
     this.vectorStore = await Chroma.fromExistingCollection(embeddings, {
       url: 'http://localhost:8001',
       collectionName: 'patient_knowledge_base',
     }).catch(async () => {
-      // لو أول مرة يشتغل، بيكريه كولكشن جديد
       return await Chroma.fromTexts(['Start'], [{}], embeddings, {
         url: 'http://localhost:8001',
         collectionName: 'patient_knowledge_base',
@@ -35,13 +57,20 @@ export class RagService implements OnModuleInit {
     });
   }
 
-  // فنكشن لإضافة بيانات طبية
   async addData(text: string, metadata: any) {
+    await this.ensureInitialized();
+    if (!this.vectorStore) {
+      throw new ServiceUnavailableException('RAG service is not available');
+    }
     await this.vectorStore.addDocuments([{ pageContent: text, metadata }]);
   }
 
-  // فنكشن التحليل والرد
   async ask(question: string) {
+    await this.ensureInitialized();
+    if (!this.vectorStore || !this.chatModel) {
+      throw new ServiceUnavailableException('RAG service is not available');
+    }
+
     const docs = await this.vectorStore.similaritySearch(question, 3);
     const context = docs.map((d) => d.pageContent).join('\n');
 

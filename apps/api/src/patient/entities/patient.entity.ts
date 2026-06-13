@@ -16,7 +16,7 @@ export enum Gender {
 @Entity()
 export class Patient {
   @PrimaryColumn()
-  patientID: String;
+  patientID: string;
 
   @Column()
   name: string;

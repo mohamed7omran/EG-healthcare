@@ -21,6 +21,16 @@ const resolveRoleFromApi = async (uid: string) => {
   return data?.role === "doctor" ? "doctor" : "patient";
 };
 
+const resolveRoleWithFallback = async (uid: string) => {
+  try {
+    return await resolveRoleFromApi(uid);
+  } catch (apiErr) {
+    console.warn("Could not load role from API, using cached/default role", apiErr);
+    const storedRole = localStorage.getItem(ROLE_STORAGE_KEY(uid));
+    return storedRole === "doctor" ? "doctor" : "patient";
+  }
+};
+
 const getFirebaseErrorCode = (err: unknown) =>
   typeof err === "object" && err !== null && "code" in err
     ? String((err as { code?: string }).code)
@@ -43,7 +53,7 @@ export default function SignInPage() {
     try {
       const credential = await signInWithEmailAndPassword(auth, email, password);
       const uid = credential.user.uid;
-      const role = await resolveRoleFromApi(uid);
+      const role = await resolveRoleWithFallback(uid);
       localStorage.setItem(ROLE_STORAGE_KEY(uid), role);
       router.push("/dashboard");
     } catch (err: unknown) {
@@ -75,7 +85,7 @@ export default function SignInPage() {
       const provider = new GoogleAuthProvider();
       const credential = await signInWithPopup(auth, provider);
       const uid = credential.user.uid;
-      const role = await resolveRoleFromApi(uid);
+      const role = await resolveRoleWithFallback(uid);
       localStorage.setItem(ROLE_STORAGE_KEY(uid), role);
       router.push("/dashboard");
     } catch (err: unknown) {

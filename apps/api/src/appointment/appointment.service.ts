@@ -75,10 +75,6 @@ export class AppointmentService {
     await this.notificationService.sendNotification(
       user.fcmToken,
       'New Appointment',
-      'There is a new pending appointment for ' +
-        patient.name +
-        '\n on ' +
-        appointment.date,
       `There is a new pending appointment for ${patient.name}\nOn ${formattedDate}`,
     );
 
@@ -98,9 +94,6 @@ export class AppointmentService {
       },
       relations: ['doctor', 'patient'],
     });
-    if (appointments.length === 0) {
-      throw new NotFoundException('No appointments found for this doctor');
-    }
     return appointments;
   }
 
@@ -112,9 +105,6 @@ export class AppointmentService {
         },
       },
     });
-    if (appointments.length === 0) {
-      throw new NotFoundException('No appointments found for this patient');
-    }
     return appointments;
   }
 
@@ -123,7 +113,6 @@ export class AppointmentService {
       .createQueryBuilder('patient')
       .innerJoin('patient.appointments', 'appointment')
       .where('appointment.doctorDoctorID = :id', { id })
-      .distinct(true)
       .getMany();
   }
 

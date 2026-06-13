@@ -50,6 +50,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [role, setRole] = useState<UserRole>("patient");
+  const [roleLoading, setRoleLoading] = useState(true);
   const currentUserId = user?.uid ?? "";
   const {
     appointments = [],
@@ -59,7 +60,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   } = useAppointmentsData({
     patientID: role === "patient" ? currentUserId : undefined,
     doctorID: role === "doctor" ? currentUserId : undefined,
-    enabled: !!currentUserId,
+    enabled: !!currentUserId && !authLoading && !roleLoading,
   });
   const [chatMessages, setChatMessages] =
     useState<ChatMessage[]>(mockChatMessages);
@@ -72,6 +73,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setUser(firebaseUser);
 
       if (firebaseUser) {
+        setRoleLoading(true);
+        const cachedRole = localStorage.getItem(
+          ROLE_STORAGE_KEY(firebaseUser.uid),
+        );
+        if (cachedRole) {
+          setRole(normalizeRole(cachedRole));
+        }
+
         try {
           const { data } = await client.get(`/users/${firebaseUser.uid}`);
           const resolvedRole = normalizeRole(data?.role);
@@ -82,13 +91,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
           );
         } catch (err) {
           console.error("Failed to load role", err);
-          const storedRole = localStorage.getItem(
-            ROLE_STORAGE_KEY(firebaseUser.uid),
-          );
-          setRole(normalizeRole(storedRole ?? undefined));
+          if (!cachedRole) {
+            setRole("patient");
+          }
+        } finally {
+          setRoleLoading(false);
         }
       } else {
         setRole("patient");
+        setRoleLoading(false);
       }
       setAuthLoading(false);
     });

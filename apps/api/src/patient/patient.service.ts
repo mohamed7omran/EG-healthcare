@@ -21,7 +21,7 @@ export class PatientService {
     return this.patientRepository.find();
   }
 
-  async findOne(id: String): Promise<Patient> {
+  async findOne(id: string): Promise<Patient> {
     const patient = await this.patientRepository.findOne({
       where: { patientID: id },
     });
@@ -30,14 +30,14 @@ export class PatientService {
   }
 
   async update(
-    id: String,
+    id: string,
     updatePatientDto: UpdatePatientDto,
   ): Promise<Patient> {
     await this.patientRepository.update({ patientID: id }, updatePatientDto);
     return this.findOne(id);
   }
 
-  async remove(id: String): Promise<void> {
+  async remove(id: string): Promise<void> {
     const result = await this.patientRepository.delete({ patientID: id });
     if (result.affected === 0) throw new NotFoundException('Patient not found');
   }
