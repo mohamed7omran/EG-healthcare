@@ -69,7 +69,6 @@ export class AppointmentService {
     await this.notificationService.sendNotification(
       user.fcmToken,
       'New Appointment',
-      `There is a new pending appointment for ${patient.name}\nOn ${formattedDate}`,
       `There is a new pending appointment for ${patient.name}\nOn ${formattedDateStr}`,
     );
 
