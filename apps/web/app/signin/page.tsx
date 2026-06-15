@@ -14,6 +14,7 @@ import {
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { client } from "@/lib/axios";
+import { getMessaging, getToken } from "firebase/messaging";
 
 const ROLE_STORAGE_KEY = (uid: string) => `user_role_${uid}`;
 const resolveRoleFromApi = async (uid: string) => {
@@ -25,7 +26,10 @@ const resolveRoleWithFallback = async (uid: string) => {
   try {
     return await resolveRoleFromApi(uid);
   } catch (apiErr) {
-    console.warn("Could not load role from API, using cached/default role", apiErr);
+    console.warn(
+      "Could not load role from API, using cached/default role",
+      apiErr,
+    );
     const storedRole = localStorage.getItem(ROLE_STORAGE_KEY(uid));
     return storedRole === "doctor" ? "doctor" : "patient";
   }
@@ -45,16 +49,50 @@ export default function SignInPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const syncFcmToken = async (userId: string) => {
+    try {
+      const permission = await Notification.requestPermission();
+
+      if (permission === "granted") {
+        const messaging = getMessaging();
+
+        const currentToken = await getToken(messaging, {
+          vapidKey: process.env.NEXT_PUBLIC_VAPID_KEY,
+        });
+
+        if (currentToken) {
+          await client.post(`/users/save-fcm-token/${userId}`, {
+            token: currentToken,
+          });
+          console.log("🚀 FCM Token synced successfully with the backend.");
+        } else {
+          console.warn(
+            "No registration token available. Request permission to generate one.",
+          );
+        }
+      } else {
+        console.warn("Notification permission denied by user.");
+      }
+    } catch (fcmError) {
+      console.error("⚠️ Failed to sync FCM Token:", fcmError);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
 
     try {
-      const credential = await signInWithEmailAndPassword(auth, email, password);
+      const credential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
       const uid = credential.user.uid;
       const role = await resolveRoleWithFallback(uid);
       localStorage.setItem(ROLE_STORAGE_KEY(uid), role);
+      await syncFcmToken(uid);
       router.push("/dashboard");
     } catch (err: unknown) {
       const errorCode = getFirebaseErrorCode(err);

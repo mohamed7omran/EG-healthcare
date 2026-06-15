@@ -62,18 +62,47 @@ export class AppointmentService {
       date: dto.date,
       time: dto.time,
       report: dto.report ?? null,
-      status: dto.status,
+      status: dto.status ?? 'Pending',
     });
 
-    const formattedDateStr = this.formattedDate(appointment.date);
-    await this.notificationService.sendNotification(
-      user.fcmToken,
-      'New Appointment',
-      `There is a new pending appointment for ${patient.name}\nOn ${formattedDate}`,
-      `There is a new pending appointment for ${patient.name}\nOn ${formattedDateStr}`,
-    );
+    const savedAppointment = await this.appointmentRepository.save(appointment);
 
-    return this.appointmentRepository.save(appointment);
+    // 3. إرسال الإشعار للدكتور فوراً لكي يوافق عليه
+    if (user.fcmToken) {
+      try {
+        const formattedDateStr = this.formattedDate(savedAppointment.date);
+        await this.notificationService.sendNotification(
+          user.fcmToken,
+          'طلب موعد جديد 🔔',
+          `هناك طلب موعد قيد الانتظار من المريض: ${patient.name}\nبتاريخ: ${formattedDateStr}`,
+        );
+        console.log(
+          `🔔 تم إرسال إشعار طلب الموعد بنجاح للدكتور: ${doctor.doctorID}`,
+        );
+      } catch (notificationError) {
+        // حماية السيرفر: لو الفايربيز فيه مشكلة في اللحظة دي، الموعد هيفضل محفوظ في الـ DB والدكتور هيشوفه لما يفتح الداشبورد
+        console.error(
+          '⚠️ فشل إرسال الإشعار عبر Firebase:',
+          notificationError.message,
+        );
+      }
+    } else {
+      // لو الدكتور مش مسجل بجهاز (معندوش Token)، بنطبع تحذير في السيرفر لكن الموعد بيتحفظ عادي
+      console.warn(
+        `⚠️ الدكتور ${doctor.doctorID} ليس لديه fcmToken مسجل. لن يصل إليه إشعار، لكن الموعد تم تسجيله في قاعدة البيانات.`,
+      );
+    }
+
+    return savedAppointment;
+
+    // const formattedDateStr = this.formattedDate(appointment.date);
+    // await this.notificationService.sendNotification(
+    //   user.fcmToken,
+    //   'New Appointment',
+    //   `There is a new pending appointment for ${patient.name}\nOn ${formattedDateStr}`,
+    // );
+
+    // return this.appointmentRepository.save(appointment);
   }
 
   findAll(): Promise<Appointment[]> {
@@ -162,14 +191,14 @@ export class AppointmentService {
       const formattedDateStr = this.formattedDate(appointment.date);
       if (dto.status == 'Scheduled') {
         await this.notificationService.sendNotification(
-          user.fcmToken,
+          user.fcmToken!,
           'Appointment',
           `Your appointment has been scheduled by Dr. ${appointment.doctor.name}\n On ${formattedDateStr}`,
         );
       }
       if (dto.status == 'Completed') {
         await this.notificationService.sendNotification(
-          user.fcmToken,
+          user.fcmToken!,
           'Appointment',
           `Dr. ${appointment.doctor.name} has completed your appointment \n at ${this.formattedDate(new Date().toISOString())}`,
         );

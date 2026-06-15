@@ -16,7 +16,7 @@ import { UserRole, Appointment, ChatMessage, AIAnalysisResult } from "@/types";
 import { mockChatMessages, mockAIAnalysisResults } from "@/data/mockData";
 import { useAppointmentsData } from "@/hooks/useAppointments";
 import { client } from "@/lib/axios";
-
+import { getMessaging, getToken } from "firebase/messaging";
 interface AppContextType {
   user: User | null;
   authLoading: boolean;
@@ -105,6 +105,55 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+
+    let isMounted = true;
+
+    const setupFCM = async () => {
+      try {
+        if (isMounted) {
+          await syncCurrentFcmToken(user.uid);
+        }
+      } catch (fcmInitError) {
+        console.warn(
+          "⚠️ Messaging service is not supported in this browser context.",
+          fcmInitError,
+        );
+      }
+    };
+
+    setupFCM();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user]); // تعيد المزامنة فور تغير المستخدم
+
+  const syncCurrentFcmToken = async (uid: string) => {
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === "granted") {
+        const messaging = getMessaging();
+        const currentToken = await getToken(messaging, {
+          vapidKey: process.env.NEXT_PUBLIC_VAPID_KEY,
+        });
+
+        if (currentToken) {
+          await client.post(`/users/save-fcm-token/${uid}`, {
+            token: currentToken,
+          });
+          console.log("🔄 Global Listener: FCM Token synced successfully.");
+        }
+      }
+    } catch (error) {
+      console.warn(
+        "⚠️ Global Listener: Notification tracking skipped or blocked.",
+        error,
+      );
+    }
+  };
 
   const signOut = async () => {
     await firebaseSignOut(auth);
