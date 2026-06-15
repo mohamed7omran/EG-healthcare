@@ -41,7 +41,7 @@ export class RagService implements OnModuleInit {
     const embeddings = new OpenAIEmbeddings({
       apiKey: 'no-key',
       configuration: { baseURL: 'http://localhost:1234/v1' },
-      modelName: 'text-embedding-qwen3-embedding-0.6b',
+      modelName: 'text-embedding-nomic-embed-text-v1.5',//modelName: 'text-embedding-qwen3-embedding-0.6b',
     });
 
     this.chatModel = new ChatOpenAI({
