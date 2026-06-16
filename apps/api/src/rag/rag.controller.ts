@@ -5,7 +5,6 @@ import { RagService } from './rag.service';
 export class RagController {
   constructor(private readonly ragService: RagService) {}
 
-  // 1. Endpoint لتخزين بيانات مريض (عشان يتدرب عليها)
   @Post('feed')
   async feedData(@Body() data: { info: string; patientId: string }) {
     return await this.ragService.addData(data.info, {
@@ -13,7 +12,6 @@ export class RagController {
     });
   }
 
-  // 2. Endpoint لسؤال الـ AI وتحليل البيانات
   @Get('ask')
   async askAi(@Query('question') question: string) {
     return await this.ragService.ask(question);

@@ -11,6 +11,8 @@ import { AiAnalysisModule } from './ai-analysis/ai-analysis.module';
 import { UserModule } from './user/user.module.js';
 import { NotificationModule } from './notification/notification.module';
 import { RagModule } from './rag/rag.module';
+import { MedicalHistoryModule } from './medical-history/medical-history.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -36,6 +38,8 @@ import { RagModule } from './rag/rag.module';
     UserModule,
     NotificationModule,
     RagModule,
+    // Medical history module (stores embeddings and provides retrieval/chat)
+    MedicalHistoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],
