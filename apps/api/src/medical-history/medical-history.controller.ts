@@ -12,6 +12,7 @@ import { MedicalHistoryService } from './medical-history.service';
 import { CreateMedicalHistoryDto } from './dto/create-medical-history.dto';
 import { SearchMedicalHistoryDto } from './dto/search-medical-history.dto';
 import { ChatMedicalHistoryDto } from './dto/chat-medical-history.dto';
+import { GenerateTemplateDto } from './dto/generate-template.dto';
 // import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 // import { RolesGuard } from '../auth/guards/roles.guard';
 // import { Roles } from '../auth/decorators/roles.decorator';
@@ -31,6 +32,11 @@ export class MedicalHistoryController {
   // @Roles('DOCTOR')
   async search(@Body() dto: SearchMedicalHistoryDto) {
     return this.service.searchMedicalHistory(dto);
+  }
+
+  @Get('patient/:id/insights')
+  async insights(@Param('id') id: string) {
+    return this.service.getPatientInsights(id);
   }
 
   @Get('patient/:id')
@@ -59,6 +65,11 @@ export class MedicalHistoryController {
   async remove(@Param('id') id: string) {
     await this.service.deleteMedicalRecord(id);
     return { ok: true };
+  }
+
+  @Post('generate-template')
+  async generateTemplate(@Body() dto: GenerateTemplateDto) {
+    return this.service.generateReportTemplate(dto);
   }
 
   @Post('chat')

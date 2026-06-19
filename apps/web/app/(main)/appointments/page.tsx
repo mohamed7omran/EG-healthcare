@@ -9,8 +9,8 @@ import { Card, CardContent } from "@/components/ui/card";
 export default function Appointments() {
   const { role, appointments, isAppointmentsLoading } = useApp();
 
-  const scheduledAppointments = appointments.filter(
-    (a) => a.status === "Pending" || a.status === "Scheduled",
+  const PendingAppointments = appointments.filter(
+    (a) => a.status === "Pending",
   );
 
   const completedAppointments = appointments.filter(
@@ -19,6 +19,9 @@ export default function Appointments() {
 
   const cancelledAppointments = appointments.filter(
     (a) => a.status === "Cancelled",
+  );
+  const ScheduledAppointments = appointments.filter(
+    (a) => a.status === "Scheduled",
   );
 
   const showPatient = role === "doctor";
@@ -67,9 +70,9 @@ export default function Appointments() {
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">
-                {scheduledAppointments.length}
+                {PendingAppointments.length}
               </p>
-              <p className="text-sm text-muted-foreground">Scheduled</p>
+              <p className="text-sm text-muted-foreground">Pending</p>
             </div>
           </CardContent>
         </Card>
@@ -102,11 +105,15 @@ export default function Appointments() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="scheduled" className="w-full">
+      <Tabs defaultValue="pending" className="w-full">
         <TabsList className="mb-6">
+          <TabsTrigger value="pending" className="gap-2">
+            <Clock className="h-4 w-4" />
+            Pending ({PendingAppointments.length})
+          </TabsTrigger>
           <TabsTrigger value="scheduled" className="gap-2">
             <Clock className="h-4 w-4" />
-            Scheduled ({scheduledAppointments.length})
+            Scheduled ({ScheduledAppointments.length})
           </TabsTrigger>
           <TabsTrigger value="completed" className="gap-2">
             <CheckCircle2 className="h-4 w-4" />
@@ -118,10 +125,30 @@ export default function Appointments() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="scheduled">
-          {scheduledAppointments.length > 0 ? (
+        <TabsContent value="pending">
+          {PendingAppointments.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {scheduledAppointments.map((apt) => (
+              {PendingAppointments.map((apt) => (
+                <AppointmentCard
+                  key={apt.appointmentID}
+                  appointment={apt}
+                  showPatient={showPatient}
+                />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              icon={Calendar}
+              title="No scheduled appointments"
+              description="You don't have any upcoming appointments."
+            />
+          )}
+        </TabsContent>
+
+        <TabsContent value="scheduled">
+          {ScheduledAppointments.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {ScheduledAppointments.map((apt) => (
                 <AppointmentCard
                   key={apt.appointmentID}
                   appointment={apt}

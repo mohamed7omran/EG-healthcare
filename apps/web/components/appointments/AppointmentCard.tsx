@@ -30,16 +30,17 @@ export function AppointmentCard({
     Pending: "bg-info/10 text-info border-info/20",
     Completed: "bg-success/10 text-success border-success/20",
     Cancelled: "bg-destructive/10 text-destructive border-destructive/20",
+    Scheduled: "bg-accent/10 text-accent border-accent/20",
   };
 
   const handleCancel = () => {
     updateAppointment(appointment.appointmentID, { status: "Cancelled" });
   };
 
-  const handleComplete = () => {
-    updateAppointment(appointment.appointmentID, { status: "Completed" });
-  };
 
+  const handleAccept = () => {
+    updateAppointment(appointment.appointmentID, { status: "Scheduled" });
+  }
   return (
     <div className="medical-card group animate-fade-in">
       <div className="flex items-start justify-between">
@@ -91,17 +92,12 @@ export function AppointmentCard({
         <div className="mt-4 flex gap-2 pt-4 border-t border-border">
           {role === "doctor" && (
             <>
-              <Link href={`/appointments/${appointment.appointmentID}/report`}>
-                <Button size="sm" className="gradient-primary border-0">
-                  Write Report
-                </Button>
-              </Link>
               <Button
                 size="sm"
-                onClick={handleComplete}
                 className="gradient-primary border-0"
+                onClick={handleAccept}
               >
-                Mark Complete
+                Accept
               </Button>
             </>
           )}
@@ -116,6 +112,14 @@ export function AppointmentCard({
           </Button>
         </div>
       )}
+      {appointment.status === "Scheduled" && role === "doctor" && (
+        <Link href={`/appointments/${appointment.appointmentID}/report`}>
+          <Button size="sm" className="gradient-primary border-0 mt-2">
+            Write Report
+          </Button>
+        </Link>
+      )}
+
 
       {appointment.report && (
         <div className="mt-4 pt-4 border-t border-border">

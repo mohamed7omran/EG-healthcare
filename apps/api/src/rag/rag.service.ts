@@ -106,17 +106,45 @@ export class RagService implements OnModuleInit {
   [الإجابة الطبية المعتمدة]:`;
 
     const res = await this.chatModel.invoke(prompt);
-    return res.content;
+
+    let rawContent = '';
+    if (typeof res.content === 'string') {
+      rawContent = res.content;
+    } else if (Array.isArray(res.content)) {
+      rawContent = res.content
+        .map((part) => ('text' in part ? part.text : ''))
+        .join('');
+    }
+
+    const cleanContent = rawContent
+      .replace(/<think>[\s\S]*?<\/think>/g, '')
+      .trim();
+
+    return cleanContent;
   }
   async ask(question: string) {
     await this.ensureInitialized();
     if (!this.vectorStore || !this.chatModel)
       throw new ServiceUnavailableException('RAG not ready');
+
     const docs = await this.vectorStore.similaritySearch(question, 3);
     const context = docs.map((d) => d.pageContent).join('\n');
+
     const res = await this.chatModel.invoke(
-      `بناءً على التالي:\n${context}\nالسؤال: ${question}`,
+      `بناءً على التالي:\n${context}\nالسؤال: ${question}\nأجب مباشرة دون تفكير داخلي أو استخدام تاغ think.`,
     );
-    return res.content;
+
+    let rawContent = '';
+    if (typeof res.content === 'string') {
+      rawContent = res.content;
+    } else if (Array.isArray(res.content)) {
+      rawContent = res.content
+        .map((part) =>
+          typeof part === 'string' ? part : 'text' in part ? part.text : '',
+        )
+        .join('');
+    }
+
+    return rawContent.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
   }
 }

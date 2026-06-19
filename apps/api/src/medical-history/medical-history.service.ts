@@ -5,6 +5,10 @@ import { MedicalHistory } from './entities/medical-history.entity';
 import { CreateMedicalHistoryDto } from './dto/create-medical-history.dto';
 import { SearchMedicalHistoryDto } from './dto/search-medical-history.dto';
 import { ChatMedicalHistoryDto } from './dto/chat-medical-history.dto';
+import {
+  GenerateTemplateDto,
+  ReportTemplate,
+} from './dto/generate-template.dto';
 import { RagService } from '../rag/rag.service';
 import { Patient } from '../patient/entities/patient.entity';
 
@@ -220,5 +224,212 @@ export class MedicalHistoryService {
     record.isActive = false;
     await this.medicalHistoryRepository.save(record);
     this.logger.log(`تم حذف السجل الطبي ${id}`);
+  }
+
+  private buildPatientContext(
+    patient: Patient,
+    records: MedicalHistory[],
+  ): string {
+    const summary =
+      typeof patient.medicalSummary === 'object' && patient.medicalSummary
+        ? JSON.stringify(patient.medicalSummary)
+        : patient.medicalSummary || '';
+
+    const profile = [
+      `Patient: ${patient.name}`,
+      `Age: ${patient.age}`,
+      `Gender: ${patient.gender}`,
+      summary ? `Medical summary: ${summary}` : '',
+      patient.medications ? `Current medications: ${patient.medications}` : '',
+      patient.currentCondition
+        ? `Current condition: ${patient.currentCondition}`
+        : '',
+      patient.medicalHistory ? `Legacy history: ${patient.medicalHistory}` : '',
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    const recordsBlock =
+      records.length > 0
+        ? records
+            .map(
+              (r) =>
+                `[${r.type}] ${r.title || 'Record'} (${r.visitDate || r.createdAt.toISOString().slice(0, 10)}): ${r.content}`,
+            )
+            .join('\n---\n')
+        : 'No prior medical history records.';
+
+    return `${profile}\n\n--- Medical Records ---\n${recordsBlock}`;
+  }
+
+  async getPatientInsights(patientID: string) {
+    const patient = await this.patientRepository.findOne({
+      where: { patientID },
+    });
+    if (!patient)
+      throw new NotFoundException(`Patient ${patientID} not found`);
+
+    const records = await this.medicalHistoryRepository.find({
+      where: { patientID, isActive: true },
+      order: { createdAt: 'DESC' },
+    });
+
+    const context = this.buildPatientContext(patient, records);
+    const insights: Array<{
+      id: string;
+      type: string;
+      label: string;
+      content: string;
+    }> = [];
+
+    const summary =
+      typeof patient.medicalSummary === 'object' && patient.medicalSummary
+        ? patient.medicalSummary
+        : null;
+
+    if (summary?.allergies) {
+      insights.push({
+        id: 'profile-allergy',
+        type: 'allergy',
+        label: 'Known Allergy (Profile)',
+        content: summary.allergies,
+      });
+    }
+
+    if (patient.medications) {
+      insights.push({
+        id: 'profile-meds',
+        type: 'medication',
+        label: 'Current Medications (Profile)',
+        content: patient.medications,
+      });
+    }
+
+    if (records.length === 0 && insights.length === 0) {
+      return {
+        insights: [
+          {
+            id: 'no-records',
+            type: 'info',
+            label: 'No History',
+            content: 'No prior medical records found for this patient.',
+          },
+        ],
+        timeline: [],
+      };
+    }
+
+    const queries = [
+      {
+        id: 'rag-allergy',
+        type: 'allergy',
+        label: 'Allergy Alert',
+        question:
+          'List any drug or food allergies mentioned in the records. Include the date if available. One concise sentence.',
+      },
+      {
+        id: 'rag-medications',
+        type: 'medication',
+        label: 'Recent Medications',
+        question:
+          'List the most recently prescribed or consumed medications. Format as a short comma-separated list.',
+      },
+      {
+        id: 'rag-conditions',
+        type: 'condition',
+        label: 'Active Conditions',
+        question:
+          'Summarize active or chronic conditions in one or two sentences.',
+      },
+    ];
+
+    await Promise.all(
+      queries.map(async (q) => {
+        try {
+          const content = await this.ragService.answerWithContext(
+            q.question,
+            context,
+          );
+          const text = String(content).trim();
+          if (
+            text &&
+            !text.includes('لا تتوفر معلومات') &&
+            !text.toLowerCase().includes('no information')
+          ) {
+            insights.push({
+              id: q.id,
+              type: q.type,
+              label: q.label,
+              content: text,
+            });
+          }
+        } catch (err) {
+          const errorMessage = err instanceof Error ? err.message : String(err);
+          this.logger.warn(`Insight query failed (${q.id}): ${errorMessage}`);
+        }
+      }),
+    );
+
+    const timeline = records.map((r) => ({
+      id: r.id,
+      type: r.type,
+      title: r.title || r.type,
+      summary: r.summary || r.content.slice(0, 120),
+      visitDate: r.visitDate || r.createdAt.toISOString().slice(0, 10),
+      doctorName: r.doctorName,
+    }));
+
+    return { insights, timeline };
+  }
+
+  async generateReportTemplate(dto: GenerateTemplateDto) {
+    const patient = await this.patientRepository.findOne({
+      where: { patientID: dto.patientID },
+    });
+    if (!patient)
+      throw new NotFoundException(`Patient ${dto.patientID} not found`);
+
+    const records = await this.medicalHistoryRepository.find({
+      where: { patientID: dto.patientID, isActive: true },
+      order: { createdAt: 'DESC' },
+    });
+
+    const context = this.buildPatientContext(patient, records);
+    const notes = dto.clinicalNotes?.trim() || 'None provided yet.';
+
+    const prompts: Record<ReportTemplate, string> = {
+      [ReportTemplate.PRESCRIPTION]: `Draft a professional medical prescription (Rx) for this patient.
+Patient age: ${patient.age}, gender: ${patient.gender}.
+Today's clinical notes: ${notes}
+Include: medication name, dosage, frequency, duration, and brief instructions.
+Check for drug interactions with prior medications in the records.
+If insufficient data, state what is missing instead of guessing.
+Format clearly as a prescription document the doctor can review and edit.`,
+
+      [ReportTemplate.CLINICAL_NOTE]: `Draft a structured clinical consultation note including:
+Subjective, Objective, Assessment, and Plan (SOAP format).
+Today's notes: ${notes}
+Base findings only on patient records and provided notes.`,
+
+      [ReportTemplate.FOLLOW_UP]: `Draft follow-up care instructions for this patient.
+Today's notes: ${notes}
+Include monitoring advice, lifestyle recommendations, and when to return.
+Base only on available records.`,
+    };
+
+    try {
+      const content = await this.ragService.answerWithContext(
+        prompts[dto.template],
+        context,
+      );
+      return {
+        template: dto.template,
+        content: String(content),
+      };
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      this.logger.warn(`Template generation failed: ${errorMessage}`);
+      throw err;
+    }
   }
 }

@@ -1,8 +1,4 @@
-export type UserRole = 'patient' | 'doctor';
-
-
-
-
+export type UserRole = "patient" | "doctor";
 
 export interface Diagnosis {
   id: string;
@@ -13,7 +9,7 @@ export interface Diagnosis {
   condition: string;
   description: string;
   treatment: string;
-  status: 'ongoing' | 'resolved' | 'follow-up';
+  status: "ongoing" | "resolved" | "follow-up";
 }
 
 // export interface Patient {
@@ -25,8 +21,6 @@ export interface Diagnosis {
 //   medicalSummary: string;
 //   assignedDoctorId: string;
 // }
-
-
 
 export interface ChatMessage {
   id: string;
@@ -40,7 +34,7 @@ export interface AIAnalysisResult {
   id: string;
   patientId?: string;
   diagnosisSummary: string;
-  riskLevel: 'low' | 'moderate' | 'high';
+  riskLevel: "low" | "moderate" | "high";
   recommendations: string[];
   analyzedAt: Date;
 }
@@ -58,7 +52,7 @@ export interface Patient {
   id?: string;
   name: string;
   age: number;
-  gender: 'Male' | 'Female' | 'Other';
+  gender: "Male" | "Female" | "Other";
   avatar?: string;
   phoneNumber?: string;
   email?: string;
@@ -67,11 +61,11 @@ export interface Patient {
   medicalSummary?:
     | string
     | {
-    bloodType?: string;
-    allergies?: string;
-    lastVisit?: string;
-    nextAppointment?: string;
-  };
+        bloodType?: string;
+        allergies?: string;
+        lastVisit?: string;
+        nextAppointment?: string;
+      };
   patientStats?: {
     totalVisits?: number;
     completed?: number;
@@ -130,7 +124,7 @@ export interface Appointment {
   patient: Patient;
   date: string;
   time: string;
-  status: 'Pending' | 'Completed' | 'Cancelled';
+  status: "Pending" | "Completed" | "Cancelled" | "Scheduled";
   type: string;
   report?: string | null;
 }
